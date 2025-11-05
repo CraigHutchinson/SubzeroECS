@@ -59,7 +59,7 @@ namespace SubzeroECS {
 			ASSERT_EQ( iBegin, iEnd );
 		}
 
-#if 0 //NOT YET IMPLEMENTED
+#if 0 //NOT YET IMPLEMENTED: Hat* optional component
 		TEST( View, Begin_NotCompleteOptional )
 		{
 			World registry;
@@ -88,7 +88,7 @@ namespace SubzeroECS {
 			EXPECT_EQ( view.end(), iEntity );
 		}
 
-#if 0 //NOT YET IMPLEMENTED
+#if 0 //NOT YET IMPLEMENTED: N-way intersection
 		TEST( View, Intersect3 )
 		{
 			World world;
