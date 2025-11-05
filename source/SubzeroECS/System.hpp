@@ -6,7 +6,7 @@
 
 namespace SubzeroECS
 {
-#if 0
+#if 1
 	class ISystem
 	{
 	public:

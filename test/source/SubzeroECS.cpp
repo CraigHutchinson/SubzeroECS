@@ -7,12 +7,12 @@
 TEST_CASE("SubzeroECS") {
   using namespace SubzeroECS;
 
-  SubzeroECS SubzeroECS("Tests");
+  SubzeroECS ecs("Tests");
 
-  CHECK(SubzeroECS.greet(LanguageCode::EN) == "Hello, Tests!");
-  CHECK(SubzeroECS.greet(LanguageCode::DE) == "Hallo Tests!");
-  CHECK(SubzeroECS.greet(LanguageCode::ES) == "¡Hola Tests!");
-  CHECK(SubzeroECS.greet(LanguageCode::FR) == "Bonjour Tests!");
+  CHECK(ecs.greet(LanguageCode::EN) == "Hello, Tests!");
+  CHECK(ecs.greet(LanguageCode::DE) == "Hallo Tests!");
+  CHECK(ecs.greet(LanguageCode::ES) == "¡Hola Tests!");
+  CHECK(ecs.greet(LanguageCode::FR) == "Bonjour Tests!");
 }
 
 TEST_CASE("SubzeroECS version") {

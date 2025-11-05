@@ -31,16 +31,22 @@ file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp")
 
 add_library(${PROJECT_NAME} ${headers} ${sources})
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
-# being a cross-platform target, we enforce standards conformance on MSVC
-target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
+set_target_properties(${PROJECT_NAME} 
+  PROPERTIES 
+    CXX_STANDARD 17)
+
+target_compile_options(${PROJECT_NAME} 
+PUBLIC 
+  # Enforce standards conformance on MSVC
+  "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->"
+)
 
 # Link dependencies
 # target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 
 target_include_directories(
-  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>
                          $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
 )
 

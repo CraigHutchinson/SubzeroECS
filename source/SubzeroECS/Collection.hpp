@@ -37,7 +37,7 @@ namespace SubzeroECS {
 		{
 			//TODO: THrow if already exists!
 			//TODO: Very temp!
-			return &components_.emplace( entityId, std::forward(component) ).first->second;
+			return &components_.emplace( entityId, component).first->second;
 		}
 
 		bool has(EntityId entityId)

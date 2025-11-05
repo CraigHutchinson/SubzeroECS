@@ -23,10 +23,10 @@ using Bare = typename std::remove_cv<typename std::remove_reference<T>::type>::t
 
 namespace SubzeroECS
 {
-	/** Creates a union view for SubzeroECSties with the selected components 
-	 * @tparam Components  The components that will be iterated over to findSubzeroECSties containign all
+	/** Creates a union view for ECS-entities with the selected components 
+	 * @tparam Components  The components that will be iterated over to find ECS-entities containing all
 						   Each type can  define required access pattern using standard C++ language as follows:
-						   * Type - Required component with no acces (TBD: Could be same as Type&)
+						   * Type - Required component with no access (TBD: Could be same as Type&)
 						   * Type& - Required component for read & write by reference
 						   * Type* - Optional component for read & write could be nullptr
 						   * const Type& - Required component for read-only
