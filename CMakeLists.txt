@@ -1,35 +1,29 @@
-# Sets the minimum version of CMake required to build the native library.
-# @note 3.20 required for `GENERATED` attribute to be project-wide i.e. Version.h
+# @note >=3.20 required for `GENERATED` attribute to be project-wide i.e. Version.h
 cmake_minimum_required(VERSION 3.20)
 
-# Provide path for script modules
+# Register repository module paths
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-find_package(Version.cmake)
 
-project(
-  SubzeroECS
-  VERSION 1.0
+include(CPM)
+
+# Version.cmake automates our sematic build versioning
+include(Version)
+
+project( SubzeroECS VERSION ${VERSION_SEMANTIC}
   LANGUAGES CXX
 )
 
 if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   message(
     FATAL_ERROR
-      "Generating & building from wihtin source is not allowed. Please configure git into a 'build' folder to run CMake from there."
+      "Generating & building from within source is not allowed. Please configure git into a 'build' folder to run CMake from there."
   )
 endif()
-
-include(CPM)
 
 # PackageProject.cmake will be used to make our target installable
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.11.0")
 
-CPMAddPackage(
-  NAME fmt
-  GIT_TAG 10.1.1
-  GITHUB_REPOSITORY fmtlib/fmt
-  OPTIONS "FMT_INSTALL YES" # create an installable target
-)
+find_package(fmt REQUIRED)
 
 # Note: globbing sources is considered bad practice as CMake's generators may not detect new files
 # automatically. Keep that in mind when changing files, or explicitly mention them here.
