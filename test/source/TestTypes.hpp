@@ -1,35 +1,29 @@
 #pragma once
 
+#include <compare>
 
 struct Human 
 {
-	Human(){}
 };
 
 struct Health
 {
-	Health(float percent) 
-		: percent(percent)
-	{}
-
 	float percent;
+
+	constexpr auto operator<=>(const Health& rhs) const = default;
 };
 struct Glasses
 {
-	Glasses() {}
 };
 
 struct Hat
 {
-	Hat() {} 
 };
 
 struct Shoes
 {
-	Shoes(float size)
-		: size(size)
-	{}
-
 	float size;
+
+	constexpr auto operator<=>(const Shoes& rhs) const = default;
 };
 

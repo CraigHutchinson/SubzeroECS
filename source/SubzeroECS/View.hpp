@@ -56,6 +56,9 @@ namespace SubzeroECS
 			   : collections_(collections)
 				, iterators_( std::move(iterators) )
 			{
+				// Advance to first valid iterator position
+				if ( !isAtValid() )
+					advanceToValid();
 			}
 
 			template< typename Component>
@@ -68,12 +71,91 @@ namespace SubzeroECS
 
 			Iterator& operator++()
 			{
-				auto& interA = std::get<0U>(iterators_);
-				++interA;
-				//auto& interB = std::tuple_element<1U>(iterators_);
+				// Advance to next valid iterator position
+				return advanceToValid();
+			}
+
+			// Check if all iterators point to the same Entity or all point to end
+			bool isAtValid() const
+			{
+				if constexpr (sizeof...(Components) == 0)
+				{
+					// No components - empty view, always at end
+					return true;
+				}
+				else if constexpr (sizeof...(Components) == 1)
+				{
+					// Single component - always valid or at end
+					return true;
+				}
+				else if constexpr (sizeof...(Components) == 2)
+				{
+					// Two components - check if both at end or both point to same entity
+					auto& it1 = std::get<0>(iterators_);
+					auto& it2 = std::get<1>(iterators_);
+					auto end1 = std::get<0>(collections_).end();
+					auto end2 = std::get<1>(collections_).end();
+					
+					return (it1 == end1 && it2 == end2) || 
+						   (it1 != end1 && it2 != end2 && *it1 == *it2);
+				}
+				else
+				{
+					// TODO: Implement for N components
+					static_assert(sizeof...(Components) <= 2, "Only 0-2 component views are currently implemented");
+				}
+			}
+
+		public:
+			Iterator& advanceToValid()
+			{
+				// Set-intersection operation over all component collections			
+				if constexpr (sizeof...(Components) == 0)
+				{
+					// No components - empty view, always at end
+					// Nothing to increment
+				}
+				else if constexpr (sizeof...(Components) == 1)
+				{
+					// Single component - just advance the iterator
+					++std::get<0>(iterators_);
+				}
+				else if constexpr (sizeof...(Components) == 2)
+				{
+					// Two-way intersection using classic std::set_intersection algorithm
+					auto& it1 = std::get<0>(iterators_);
+					auto& it2 = std::get<1>(iterators_);
+					auto end1 = std::get<0>(collections_).end();
+					auto end2 = std::get<1>(collections_).end();
+					
+					// Advance past the current position
+					++it1;
+					
+					// Find next intersection point
+					while (it1 != end1 && it2 != end2)
+					{
+						if (*it1 < *it2)
+							++it1;
+						else
+						{
+							if (!(*it2 < *it1))
+								return *this; // *it1 and *it2 are equivalent (intersection found)							
+							++it2;
+						}
+					}
+					
+					// No more intersections, set both to end
+					it1 = end1;
+					it2 = end2;
+				}
+				else
+				{
+					// TODO: Implement for N components
+					static_assert(sizeof...(Components) <= 2, "Only 0-2 component views are currently implemented");
+				}
 
 				return *this;
-			}
+			}		
 
 			bool operator != ( const Iterator& rhs ) const
 			{ 
@@ -122,7 +204,9 @@ namespace SubzeroECS
 
 		/** TODO */
 		Iterator begin() 
-		{ return Iterator( collections_, CollectionIterators( getCollection<Components>().begin()...) ); }
+		{ 
+			return Iterator( collections_, CollectionIterators( getCollection<Components>().begin()...) );
+		}
 		
 		/** TODO */
 		Iterator end() 

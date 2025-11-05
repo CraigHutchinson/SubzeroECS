@@ -33,7 +33,9 @@ namespace SubzeroECS
 	{
 		AndOp( const Lhs& lhs, const Rhs& rhs ) : lhs_(lhs), rhs_(rhs) {}
 		constexpr bool operator() (const Entity& entity) const
-		{ return lhs_(entity) && rhs_(entity); }
+		{ 
+			return lhs_(entity) && rhs_(entity);
+		}
 	private:
 		const Lhs lhs_;
 		const Rhs rhs_;
@@ -65,7 +67,8 @@ namespace SubzeroECS
 		GreaterOp( const Lhs& lhs, const Value& value ) : QueryValueOp<Lhs,Value>(lhs,value) {}
 		constexpr bool operator() (const Entity& entity) const
 		{ 
-			return this->lhs_(entity) > this->value_; 
+			auto* component = this->lhs_(entity);
+			return (component != nullptr) && (*component) > this->value_;	
 		}
 	};
 
@@ -87,7 +90,10 @@ namespace SubzeroECS
 		GreaterEqualOp( const Lhs& lhs, const Value& value ) : QueryValueOp<Lhs,Value>(lhs,value) {}
 		
 		constexpr bool operator() (const Entity& entity) const
-		{ return this->lhs_(entity) >= this->value_; }
+		{
+			auto* component = this->lhs_(entity);
+			return (component != nullptr) && (*component) >= this->value_;
+		}
 	};
 
 	/* Logical-greater query object '>='
@@ -106,7 +112,10 @@ namespace SubzeroECS
 	{
 		LessOp( const Lhs& lhs, const Value& value ) : QueryValueOp<Lhs,Value>(lhs,value) {}
 		constexpr bool operator() (const Entity& entity) const
-		{ return this->lhs_(entity) < this->value_; }
+		{
+			auto* component = this->lhs_(entity);
+			return (component != nullptr) && (*component) < this->value_;	
+		}
 	};
 
 	/* Logical-greater query object '<'
@@ -126,7 +135,10 @@ namespace SubzeroECS
 	{
 		LessEqualOp( const Lhs& lhs, const Value& value ) : QueryValueOp<Lhs,Value>(lhs,value) {}
 		constexpr bool operator() (const Entity& entity) const
-		{ return this->lhs_(entity) <= this->value_; }
+		{
+			auto* component = this->lhs_(entity);
+			return (component != nullptr) && (*component) <= this->value_;			
+		}
 	};
 
 	/* Logical-greater query object '<='
@@ -136,6 +148,32 @@ namespace SubzeroECS
 		LessEqualOp<Lhs, Value> >::type operator <=(const Lhs& lhs, const Value& value)
 	{
 		return LessEqualOp<Lhs, Value>( lhs, value );
+	}
+
+	/* Has<Component> to Find<Component> conversion for comparison operators */
+	
+	template<class Component, class Value>
+	GreaterOp<Find<Component>, Value> operator>(const Has<Component>&, const Value& value)
+	{
+		return GreaterOp<Find<Component>, Value>(Find<Component>(), value);
+	}
+
+	template<class Component, class Value>
+	GreaterEqualOp<Find<Component>, Value> operator>=(const Has<Component>&, const Value& value)
+	{
+		return GreaterEqualOp<Find<Component>, Value>(Find<Component>(), value);
+	}
+
+	template<class Component, class Value>
+	LessOp<Find<Component>, Value> operator<(const Has<Component>&, const Value& value)
+	{
+		return LessOp<Find<Component>, Value>(Find<Component>(), value);
+	}
+
+	template<class Component, class Value>
+	LessEqualOp<Find<Component>, Value> operator<=(const Has<Component>&, const Value& value)
+	{
+		return LessEqualOp<Find<Component>, Value>(Find<Component>(), value);
 	}
 
 } //END: SubzeroECS

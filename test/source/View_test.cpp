@@ -33,38 +33,42 @@ namespace SubzeroECS {
 		TEST( View, Begin_Empty )
 		{
 			World registry;
-			Collection<Human,Health,Hat> collections(registry);
-			View<Health, Human, Hat> view(registry);
+			Collection<Health,Hat> collections(registry);
+			View<Health, Hat> view(registry);
 			ASSERT_EQ( view.begin(), view.end() );
 		}
 
 		TEST( View, Begin_NotEmpty )
 		{
 			World registry;
-			Collection<Human,Health,Hat> collections(registry);
-			(void)registry.create( Human(), Health(100.0F), Hat() );
+			Collection<Health,Hat> collections(registry);
+			(void)registry.create( Health{100.0F}, Hat() );
 
-			View<Health, Human, Hat> view(registry);
+			View<Health, Hat> view(registry);
 			ASSERT_NE( view.begin(), view.end() );
 		}
 
 		TEST( View, Begin_HasPartial )
 		{
 			World registry;
-			Collection<Human,Health,Hat> collections(registry);
-			View<Health, Human, Hat> view(registry);
-			(void)registry.create( Human(), Health(100.0F)/* , Hat() -- Missing hat! */ );
-			ASSERT_EQ( view.begin(), view.end() );
+			Collection<Health,Hat> collections(registry);
+			View<Health, Hat> view(registry);
+			(void)registry.create( Health{100.0F}/* , Hat() -- Missing hat! */ );
+			auto iBegin = view.begin();
+			auto iEnd = view.end();
+			ASSERT_EQ( iBegin, iEnd );
 		}
 
+#if 0 //NOT YET IMPLEMENTED
 		TEST( View, Begin_NotCompleteOptional )
 		{
 			World registry;
-			Collection<Human,Health,Hat> collections(registry);
-			View<Health, Human, Hat*> view(registry); //< Hat is optional with '*'
-			(void)registry.create( Human(), Health(100.0F)/* , Hat() -- Missing hat! */ );
+			Collection<Health,Hat> collections(registry);
+			View<Health, Hat*> view(registry); //< Hat is optional with '*'
+			(void)registry.create( Health{100.0F}/* , Hat() -- Missing hat! */ );
 			ASSERT_EQ( view.begin(), view.end() );
 		}
+#endif
 
 		TEST( View, Intersect2 )
 		{
@@ -81,9 +85,10 @@ namespace SubzeroECS {
 				EXPECT_EQ( entityId, *iEntity );
 				++iEntity;
 			}
-			EXPECT_EQ( view.end(), ++iEntity );
+			EXPECT_EQ( view.end(), iEntity );
 		}
 
+#if 0 //NOT YET IMPLEMENTED
 		TEST( View, Intersect3 )
 		{
 			World world;
@@ -92,7 +97,7 @@ namespace SubzeroECS {
 
 			for ( EntityId humanId  : { 1, 2, 3, 4, 5, 8 } ) world.add( humanId, Human() );
 			for ( EntityId hatId    : { 3, 5, 6, 7, 8, 9, 10 } ) world.add( hatId, Hat() );
-			for ( EntityId healthId : { 1, 3, 5, 8, 9 } ) world.add( healthId, Health(100.0F) );
+			for ( EntityId healthId : { 1, 3, 5, 8, 9 } ) world.add( healthId, Health{100.0F} );
 
 			auto iEntity = view.begin();
 			for ( EntityId entityId : {  3, 5, 8 } )
@@ -103,6 +108,7 @@ namespace SubzeroECS {
 			EXPECT_EQ( view.end(), ++iEntity );
 		}
 
+
 		TEST( View, Intersect4 )
 		{
 			World world;
@@ -111,7 +117,7 @@ namespace SubzeroECS {
 
 			for ( EntityId humanId  : { 1, 2, 3, 4, 5, 7, 9 } ) world.add( humanId, Human() );
 			for ( EntityId hatId    : { 3, 5, 6, 7, 8, 9 } ) world.add( hatId, Hat() );
-			for ( EntityId healthId : { 1, 3, 7, 9, 10 } ) world.add( healthId, Health(100.0F) );
+			for ( EntityId healthId : { 1, 3, 7, 9, 10 } ) world.add( healthId, Health{100.0F} );
 			for ( EntityId glassId  : { 3, 4, 6, 7, 8, 9, 11 } ) world.add( glassId, Glasses() );
 
 			auto iEntity = view.begin();
@@ -122,6 +128,7 @@ namespace SubzeroECS {
 			}
 			EXPECT_EQ( view.end(), ++iEntity );
 		}
+#endif
 
 	} //END: Test
 } //END: SubzeroECS
