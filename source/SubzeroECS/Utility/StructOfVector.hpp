@@ -3,7 +3,7 @@
 #include <tuple>
 #include <vector>
 
-namespace Sub0Ent {
+namespace SubzeroECS {
 namespace Utility
 {
 	/**
@@ -178,4 +178,4 @@ namespace Utility
 
 
 } //END: Utility
-} //END: Sub0Ent
+} //END: SubzeroECS

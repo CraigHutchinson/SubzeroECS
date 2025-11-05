@@ -5,7 +5,7 @@
 #include <typeindex>
 #include <unordered_map>
 
-namespace Sub0Ent
+namespace SubzeroECS
 {
 	/* Tuple of parameters for supplied types constructor */
 	template< typename R, typename... Args>
@@ -74,4 +74,4 @@ namespace Sub0Ent
 		TypeIndexLookup types_;
 	};
 
-} //END: Sub0Ent
+} //END: SubzeroECS

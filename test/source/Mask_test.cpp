@@ -1,8 +1,8 @@
-#include "sub0ent/Mask.hpp"
+#include "SubzeroECS/Mask.hpp"
 
 #include <gtest/gtest.h>
 
-namespace Sub0Ent {
+namespace SubzeroECS {
 namespace Test 
 {
 
@@ -57,5 +57,5 @@ namespace Test
 	}
 
 } //END: Test
-} //END: Sub0Ent
+} //END: SubzeroECS
 

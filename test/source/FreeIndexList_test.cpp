@@ -1,8 +1,8 @@
-#include "sub0ent/FreeIndexList.hpp"
+#include "SubzeroECS/FreeIndexList.hpp"
 
 #include <gtest/gtest.h>
 
-namespace Sub0Ent {
+namespace SubzeroECS {
 namespace Test 
 {
 
@@ -52,4 +52,4 @@ namespace Test
 	};
 
 } //END: Test
-} //END: Sub0Ent
+} //END: SubzeroECS

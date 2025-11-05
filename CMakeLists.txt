@@ -7,7 +7,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(Version.cmake)
 
 project(
-  Sub0Ent
+  SubzeroECS
   VERSION 1.0
   LANGUAGES CXX
 )

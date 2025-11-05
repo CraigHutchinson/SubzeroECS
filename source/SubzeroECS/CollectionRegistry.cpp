@@ -2,7 +2,7 @@
 #include "Collection.hpp"
 
 
-namespace Sub0Ent
+namespace SubzeroECS
 {	
 
 	CollectionRegistry::CollectionRegistry() 
@@ -21,7 +21,7 @@ namespace Sub0Ent
 			buffer = buffer->next;
 		}
 	}
-} //END: Sub0Ent
+} //END: SubzeroECS
 
 
 

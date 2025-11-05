@@ -1,7 +1,7 @@
 
 #include "FreeIndexList.hpp"
 
-namespace Sub0Ent 
+namespace SubzeroECS 
 {
 
 	FreeIndexList::FreeIndexList() 
@@ -30,4 +30,4 @@ namespace Sub0Ent
 		return mask_ == Mask::cNone; 
 	}
 
-} //END: Sub0Ent
+} //END: SubzeroECS

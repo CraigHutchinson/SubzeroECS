@@ -21,10 +21,10 @@ struct get_type_index<T>
 template<typename T>
 using Bare = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
-namespace Sub0Ent
+namespace SubzeroECS
 {
-	/** Creates a union view for Sub0Entties with the selected components 
-	 * @tparam Components  The components that will be iterated over to findSub0Entties containign all
+	/** Creates a union view for SubzeroECSties with the selected components 
+	 * @tparam Components  The components that will be iterated over to findSubzeroECSties containign all
 						   Each type can  define required access pattern using standard C++ language as follows:
 						   * Type - Required component with no acces (TBD: Could be same as Type&)
 						   * Type& - Required component for read & write by reference
@@ -87,9 +87,9 @@ namespace Sub0Ent
 
 			operator EntityId() const
 			{ 
-				auto iSub0Entty = std::get<0U>(iterators_);
+				auto iSubzeroECSty = std::get<0U>(iterators_);
 				auto iEnd = std::get<0U>(collections_).end();
-				return (iSub0Entty != iEnd) ? iSub0Entty->first 
+				return (iSubzeroECSty != iEnd) ? iSubzeroECSty->first 
 										 : cInvalid_EntityId; 
 			}
 
@@ -131,4 +131,4 @@ namespace Sub0Ent
 		Collections collections_;
 	};
 
-} //END: Sub0Ent
+} //END: SubzeroECS

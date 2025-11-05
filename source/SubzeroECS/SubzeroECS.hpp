@@ -5,8 +5,8 @@
 #include "Query.hpp"
 #include "Logical.hpp"
 
-namespace Sub0Ent
+namespace SubzeroECS
 {
 
 
-} //END: Sub0Ent
+} //END: SubzeroECS

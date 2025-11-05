@@ -4,7 +4,7 @@
 
 #include "Entity.hpp"
 
-namespace Sub0Ent
+namespace SubzeroECS
 {
 	/* Queriable object base type for operator overload resolution
 	*/
@@ -34,4 +34,4 @@ namespace Sub0Ent
 		return query( entity, rhs );
 	}
 
-} //END: Sub0Ent
+} //END: SubzeroECS

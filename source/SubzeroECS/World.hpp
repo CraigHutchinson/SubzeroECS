@@ -5,7 +5,7 @@
 #include "Entity.hpp"
 #include "CollectionRegistry.hpp"
 
-namespace Sub0Ent
+namespace SubzeroECS
 {
 	class World
 	{
@@ -109,4 +109,4 @@ namespace Sub0Ent
 	}
 #endif
 
-} //END: Sub0Ent
+} //END: SubzeroECS

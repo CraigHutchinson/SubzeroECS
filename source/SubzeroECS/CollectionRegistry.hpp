@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include "GlobalUniqueIndex.hpp"
 
-namespace Sub0Ent {
+namespace SubzeroECS {
 
 template<typename... Component>
 class Collection;
@@ -152,4 +152,4 @@ private:
 };
 
 
-} //END: Sub0Ent
+} //END: SubzeroECS

@@ -1,10 +1,10 @@
-#include "sub0ent/CollectionRegistry.hpp"
-#include "sub0ent/Collection.hpp"
+#include "SubzeroECS/CollectionRegistry.hpp"
+#include "SubzeroECS/Collection.hpp"
 
 #include "TestTypes.hpp"
 #include <gtest/gtest.h>
 
-namespace Sub0Ent {
+namespace SubzeroECS {
 	namespace Test 
 	{
 
@@ -17,7 +17,7 @@ namespace Sub0Ent {
 
 
 	} //END: Test
-} //END: Sub0Ent
+} //END: SubzeroECS
 
 
 

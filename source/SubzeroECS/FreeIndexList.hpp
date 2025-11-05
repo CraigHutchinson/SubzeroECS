@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include "Mask.hpp"
 
-namespace Sub0Ent {
+namespace SubzeroECS {
 
 
 /** Handles a list of free indices as a bit-mask
@@ -43,4 +43,4 @@ private:
 	Mask mask_;
 };
 
-} //END: Sub0Ent
+} //END: SubzeroECS

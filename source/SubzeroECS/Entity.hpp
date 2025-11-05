@@ -7,7 +7,7 @@
 #include "EntityId.hpp"
 #define CPP11 1
 
-namespace Sub0Ent
+namespace SubzeroECS
 {
 	//Forward declaration
 	class World;
@@ -31,7 +31,7 @@ namespace Sub0Ent
 
 		/** Returns whether the entity id is a null-ent where id()==0 */
 		constexpr bool isNull() const { 
-			return Sub0Ent::isNull( id_ ); 
+			return SubzeroECS::isNull( id_ ); 
 		}
 		
 		template< typename Component >
@@ -90,4 +90,4 @@ namespace Sub0Ent
 		return !(lhs == rhs);
 	}
 
-} //END: Sub0Ent
+} //END: SubzeroECS

@@ -10,8 +10,8 @@ template<> std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<
 
 
 
-namespace Sub0Ent {
+namespace SubzeroECS {
 namespace Test 
 {
 } //END: Test
-} //END: Sub0Ent
+} //END: SubzeroECS

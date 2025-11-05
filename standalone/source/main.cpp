@@ -1,5 +1,5 @@
-#include <sub0ent/sub0ent.h>
-#include <sub0ent/version.h>
+#include <SubzeroECS/SubzeroECS.h>
+#include <SubzeroECS/version.h>
 
 #include <cxxopts.hpp>
 #include <iostream>
@@ -7,11 +7,11 @@
 #include <unordered_map>
 
 auto main(int argc, char** argv) -> int {
-  const std::unordered_map<std::string, sub0ent::LanguageCode> languages{
-      {"en", sub0ent::LanguageCode::EN},
-      {"de", sub0ent::LanguageCode::DE},
-      {"es", sub0ent::LanguageCode::ES},
-      {"fr", sub0ent::LanguageCode::FR},
+  const std::unordered_map<std::string, SubzeroECS::LanguageCode> languages{
+      {"en", SubzeroECS::LanguageCode::EN},
+      {"de", SubzeroECS::LanguageCode::DE},
+      {"es", SubzeroECS::LanguageCode::ES},
+      {"fr", SubzeroECS::LanguageCode::FR},
   };
 
   cxxopts::Options options(*argv, "A program to welcome the world!");
@@ -36,7 +36,7 @@ auto main(int argc, char** argv) -> int {
   }
 
   if (result["version"].as<bool>()) {
-    std::cout << "Sub0Ent, version " << SUB0ENT_VERSION << std::endl;
+    std::cout << "SubzeroECS, version " << SubzeroECS_VERSION << std::endl;
     return 0;
   }
 
@@ -46,8 +46,8 @@ auto main(int argc, char** argv) -> int {
     return 1;
   }
 
-  sub0ent::Sub0Ent sub0ent(name);
-  std::cout << sub0ent.greet(langIt->second) << std::endl;
+  SubzeroECS::SubzeroECS SubzeroECS(name);
+  std::cout << SubzeroECS.greet(langIt->second) << std::endl;
 
   return 0;
 }

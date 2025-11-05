@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace Sub0Ent
+namespace SubzeroECS
 {
 	/* Entity unique world Id
 	@remarks May be uint16_t to reduce memory usage with trade off for Entity entity count
@@ -15,5 +15,5 @@ namespace Sub0Ent
 	constexpr inline bool isNull( EntityId entityId )
 	{ return entityId == cInvalid_EntityId; }
 
-} //END: Sub0Ent
+} //END: SubzeroECS
 

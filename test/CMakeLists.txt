@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14...3.22)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
 
-project(Sub0EntTests LANGUAGES CXX)
+project(SubzeroECSTests LANGUAGES CXX)
 
 # ---- Options ----
 
@@ -24,11 +24,11 @@ find_package(GTest)
 
 CPMAddPackage("gh:TheLartians/Format.cmake@1.7.3")
 
-if ( NOT TARGET Sub0Ent )
+if ( NOT TARGET SubzeroECS )
     if(TEST_INSTALLED_VERSION)
-      find_package(Sub0Ent REQUIRED)
+      find_package(SubzeroECS REQUIRED)
     else()
-      CPMAddPackage(NAME Sub0Ent SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+      CPMAddPackage(NAME SubzeroECS SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
     endif()
 endif()
 
@@ -39,21 +39,21 @@ add_executable(${PROJECT_NAME} ${sources})
 target_link_libraries(${PROJECT_NAME} 
     #doctest::doctest 
     GTest::Main
-    Sub0Ent::Sub0Ent
+    SubzeroECS::SubzeroECS
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
 # enable compiler warnings
 if(NOT TEST_INSTALLED_VERSION)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    target_compile_options(Sub0Ent PUBLIC -Wall -Wpedantic -Wextra -Werror)
+    target_compile_options(SubzeroECS PUBLIC -Wall -Wpedantic -Wextra -Werror)
   elseif(MSVC)
-    target_compile_options(Sub0Ent PUBLIC /W4 /WX)
+    target_compile_options(SubzeroECS PUBLIC /W4 /WX)
     target_compile_definitions(${PROJECT_NAME} PUBLIC DOCTEST_CONFIG_USE_STD_HEADERS)
   endif()
 endif()
 
-# ---- Add Sub0EntTests ----
+# ---- Add SubzeroECSTests ----
 
 enable_testing()
 
@@ -69,6 +69,6 @@ gtest_discover_tests(${PROJECT_NAME})
 # ---- code coverage ----
 
 if(ENABLE_TEST_COVERAGE)
-  target_compile_options(Sub0Ent PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
-  target_link_options(Sub0Ent PUBLIC -fprofile-arcs -ftest-coverage)
+  target_compile_options(SubzeroECS PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
+  target_link_options(SubzeroECS PUBLIC -fprofile-arcs -ftest-coverage)
 endif()

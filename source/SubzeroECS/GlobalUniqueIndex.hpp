@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include "FreeIndexList.hpp"
 
-namespace Sub0Ent {
+namespace SubzeroECS {
 
 	/** Stores a new incremental counter value when instantiated. 
 	@remark When a counter is released its index will be reused
@@ -41,5 +41,5 @@ namespace Sub0Ent {
 		static FreeIndexList freeList_s; ///< Mask of available indices
 	};
 
-} //END: Sub0Ent
+} //END: SubzeroECS
 

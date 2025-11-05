@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace Sub0Ent 
+namespace SubzeroECS 
 {
 
 /** Bitmask 
@@ -77,4 +77,4 @@ private:
 	Bits mask_; //< Mask value
 };
 
-} //END: Sub0Ent
+} //END: SubzeroECS

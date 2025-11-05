@@ -1,13 +1,13 @@
-#include "Sub0Ent/World.hpp"
-#include "Sub0Ent/Collection.hpp"
-#include "Sub0Ent/Collection.hpp"
-#include "Sub0Ent/View.hpp"
+#include "SubzeroECS/World.hpp"
+#include "SubzeroECS/Collection.hpp"
+#include "SubzeroECS/Collection.hpp"
+#include "SubzeroECS/View.hpp"
 
 #include "TestTypes.hpp"
 #include <gtest/gtest.h>
 
 
-namespace Sub0Ent {	
+namespace SubzeroECS {	
 	namespace Test {
 
 		TEST( View, GetCollection )
@@ -124,4 +124,4 @@ namespace Sub0Ent {
 		}
 
 	} //END: Test
-} //END: Sub0Ent
+} //END: SubzeroECS

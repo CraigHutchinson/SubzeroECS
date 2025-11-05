@@ -1,13 +1,13 @@
-#include "sub0ent/Logical.hpp"
+#include "SubzeroECS/Logical.hpp"
 
-#include "sub0ent/World.hpp" //<NOTE: Needed for majority of tests for component storage etc!
-#include "sub0ent/Collection.hpp" //<NOTE: Needed for majority of tests for component storage etc!
-#include "sub0ent/Has.hpp"
+#include "SubzeroECS/World.hpp" //<NOTE: Needed for majority of tests for component storage etc!
+#include "SubzeroECS/Collection.hpp" //<NOTE: Needed for majority of tests for component storage etc!
+#include "SubzeroECS/Has.hpp"
 
 #include "TestTypes.hpp"
 #include <gtest/gtest.h>
 
-namespace Sub0Ent {
+namespace SubzeroECS {
 namespace Test 
 {
 
@@ -113,4 +113,4 @@ public:
 };
 
 } //END: Test
-} //END: Sub0Ent
+} //END: SubzeroECS

@@ -1,7 +1,7 @@
 
 #include "Mask.hpp"
 
-namespace Sub0Ent 
+namespace SubzeroECS 
 {
 
 	Mask::Index Mask::indexOfOnlyBit( Bits oneBit )
@@ -26,5 +26,5 @@ namespace Sub0Ent
 		return indexOfOnlyBit( freeBit );
 	}
 
-} //END: Sub0Ent
+} //END: SubzeroECS
 

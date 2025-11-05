@@ -5,7 +5,7 @@
 #include "Entity.hpp"
 #include "World.hpp"
 
-namespace Sub0Ent
+namespace SubzeroECS
 {
 
     template< typename Component >
@@ -32,4 +32,4 @@ namespace Sub0Ent
     constexpr Component& get( World& world, EntityId entityId )
     { return world.get<Component>(entityId); }
 
-} //END: Sub0Ent
+} //END: SubzeroECS

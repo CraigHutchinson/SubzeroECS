@@ -1,8 +1,8 @@
-#include "sub0ent/GlobalUniqueIndex.hpp"
+#include "SubzeroECS/GlobalUniqueIndex.hpp"
 
 #include <gtest/gtest.h>
 
-namespace Sub0Ent {
+namespace SubzeroECS {
 namespace Test 
 {	
 
@@ -50,4 +50,4 @@ namespace Test
 	};
 
 } //END: Test
-} //END: Sub0Ent
+} //END: SubzeroECS

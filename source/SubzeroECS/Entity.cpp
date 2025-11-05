@@ -6,7 +6,7 @@
 #include "Has.hpp"
 
 
-namespace Sub0Ent 
+namespace SubzeroECS 
 {
 
 	Entity::Entity() 
@@ -28,4 +28,4 @@ namespace Sub0Ent
 	}
 
 
-} //END: Sub0Ent
+} //END: SubzeroECS

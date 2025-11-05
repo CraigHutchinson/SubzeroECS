@@ -4,14 +4,14 @@
 #include "Collection.hpp"
 #include "View.hpp"
 
-namespace Sub0Ent
+namespace SubzeroECS
 {
 #if 0
 	class ISystem
 	{
 	public:
 
-		/** Update the system which wil call update(Sub0Ent::EntityId) for each entity in view
+		/** Update the system which wil call update(SubzeroECS::EntityId) for each entity in view
 		 */
 		virtual void update() = 0;
 	
@@ -19,7 +19,7 @@ namespace Sub0Ent
 		/** Update function called for each entity matching the system view
 		 * @param[in]  entityId  The entity entity identifier for reference		 
 		 */
-		virtual void update( const Sub0Ent::EntityId entityId ) = 0;
+		virtual void update( const SubzeroECS::EntityId entityId ) = 0;
 	};
 
 	template< typename... Components >
@@ -36,13 +36,13 @@ namespace Sub0Ent
 		virtual void update() override
 		{
 			const auto iEnd = end();
-			for ( auto iSub0Entty = begin(); iSub0Entty != iEnd; ++iSub0Entty) 
+			for (ï¿½autoSubzeroECSntty = begin();SubzeroECSntty != iEnd; +SubzeroECSntty) 
 			{ 
-				update( *iSub0Entty );
+				update( *iSubzeroECSty );
 			} 
 		}
 
 	};
 #endif
 
-} //END: Sub0Ent
+} //END: SubzeroECS

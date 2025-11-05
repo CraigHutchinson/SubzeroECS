@@ -3,7 +3,7 @@
 #include "Query.hpp"
 #include "Has.hpp"
 
-namespace Sub0Ent
+namespace SubzeroECS
 {
 	/** Has Operator
 	*/
@@ -136,4 +136,4 @@ namespace Sub0Ent
 		return LessEqualOp<Lhs, Value>( lhs, value );
 	}
 
-} //END: Sub0Ent
+} //END: SubzeroECS

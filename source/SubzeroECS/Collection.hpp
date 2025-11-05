@@ -6,7 +6,7 @@
 #include "CollectionRegistry.hpp"
 #include "EntityId.hpp"
 
-namespace Sub0Ent {
+namespace SubzeroECS {
 
 	template< typename... Components >
 	class Collection;
@@ -81,7 +81,7 @@ namespace Sub0Ent {
 	private:
 		CollectionRegistry& registry_; //< Registry the collection is attached to
 		
-		EntityIdVector ids_; //< Sub0Entty ids for lookup
+		EntityIdVector ids_; //< SubzeroECSty ids for lookup
 		ComponentVector components_; //< Comoonent data
 	};
 
@@ -112,4 +112,4 @@ namespace Sub0Ent {
 		CollectionTuple collections_;
 	};
 
-} //END: Sub0Ent
+} //END: SubzeroECS
