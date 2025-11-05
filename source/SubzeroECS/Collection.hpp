@@ -11,15 +11,15 @@ namespace SubzeroECS {
 	template< typename... Components >
 	class Collection;
 
-	template< typename Component>
-	class Collection<Component>
+	template< typename TComponent>
+	class Collection<TComponent>
 	{
 	public: 
-		typedef Component Component;
-		
-		typedef std::vector<EntityId> EntityIdVector;
-		typedef std::vector<Component> ComponentVector;
-		typedef typename EntityIdVector::iterator Iterator;
+		using Component = TComponent;
+
+		using EntityIdVector = std::vector<EntityId>;
+		using ComponentVector = std::vector<Component>;
+		using Iterator = typename EntityIdVector::iterator;
 
 	public:
 		Collection( CollectionRegistry& registry )
@@ -33,55 +33,65 @@ namespace SubzeroECS {
 			registry_.clear(this);
 		}
 
-		Component* create(EntityId entityId, Component&& component)
+		Component* create(EntityId entityId, Component&& component) noexcept(false)
 		{
-			//TODO: THrow if already exists!
-			//TODO: Very temp!
-			return &components_.emplace( entityId, component).first->second;
+			auto iFind = std::lower_bound( ids_.begin(), ids_.end(), entityId );
+			if ( iFind != ids_.end() && *iFind == entityId )
+			{
+				throw std::invalid_argument( "EntityId already has this component type for call to Collection::create()" );
+			}
+
+			const size_t index = std::distance( ids_.begin(), iFind );
+			ids_.insert( iFind, entityId );	
+			components_.insert( components_.begin() + index, std::move(component) );
+			return &components_.at( index );
 		}
 
 		bool has(EntityId entityId)
 		{
-			return components_.find(entityId) != components_.end();			
+			auto iFind = std::lower_bound( ids_.begin(), ids_.end(), entityId );
+			return iFind != ids_.end() && *iFind == entityId;
 		}
 
 		/** Get pointer to a component of the specified entityId
 		@return Component instance of nullptr if no component exists for the entity
 		*/
-		Component* find(EntityId entityId)
+		Component* find(EntityId entityId) noexcept(true)
 		{
-			const auto iFind = components_.find(entityId);
-			return iFind != components_.end() ? &iFind->second : nullptr;			
+			const auto iFind = std::lower_bound( ids_.begin(), ids_.end(), entityId );
+			return (iFind != ids_.end() && *iFind == entityId)
+				? &at(iFind)
+				: nullptr;
 		}
 
 		/** Get reference to a component of the specified entityId
 		@warning Will throw exception if the entityId was not found, use find() if component existance is unknown
 		*/
-		Component& get(EntityId entityId)
+		Component& get(EntityId entityId) noexcept(false)
 		{
-			const auto iFind = components_.find(entityId);
-			if ( iFind == components_.end() )
+			const auto iFind = std::lower_bound( ids_.begin(), ids_.end(), entityId );
+			if ( iFind == ids_.end() )
 				throw std::invalid_argument( "EntityId does not have this component type for call to Collection::get()");
-			return iFind->second; //< Will throw if not valid itertor!
+			return at(iFind);
 		}
 
-		Component& at( const Iterator& iEntity )
+		Component& at( const Iterator& iEntity ) noexcept(true)
 		{
-			return iEntity->second;
+			return components_.at( std::distance( ids_.begin(), iEntity ) );
 		}
 
 		/** TODO */
 		Iterator begin() 
-		{ return components_.begin(); }
+		{ return ids_.begin(); }
 
 		/** TODO */
 		Iterator end() 
-		{ return components_.end(); }
+		{ return ids_.end(); }
 
 	private:
 		CollectionRegistry& registry_; //< Registry the collection is attached to
 		
-		EntityIdVector ids_; //< SubzeroECSty ids for lookup
+		EntityIdVector ids_; //< ECS-entity ids for lookup
 		ComponentVector components_; //< Comoonent data
 	};
 

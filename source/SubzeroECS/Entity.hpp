@@ -3,9 +3,9 @@
 #include <cassert>
 #include <cstdint>
 #include <stdexcept>
+#include <utility> //< std::forward
 
 #include "EntityId.hpp"
-#define CPP11 1
 
 namespace SubzeroECS
 {
@@ -15,7 +15,7 @@ namespace SubzeroECS
 	class Entity
 	{
 	public:
-		/* Default consturctor initialises a null hentity reference */
+		/* Default consturctor initialises a null ECS-entity reference */
 		Entity();
 
 		/* Create aentity for the specified world and Id */
@@ -34,32 +34,30 @@ namespace SubzeroECS
 			return SubzeroECS::isNull( id_ ); 
 		}
 		
-		template< typename Component >
+		template< typename TComponent >
 		constexpr bool has() const { 
-			return world.has<Component>(id()); 
+			return world().template has<TComponent>(id()); 
 		}
 
-		template< typename Component >
-		constexpr Component& get() const {
-			return world.get<Component>(id()); 
+		template< typename TComponent >
+		constexpr TComponent& get() const {
+			return world().template get<TComponent>(id()); 
 		}
 
-		template< typename Component >
-		constexpr Component* find() const {
-            return world.find<Component>(id()); 
+		template< typename TComponent >
+		constexpr TComponent* find() const {
+            return world().template find<TComponent>(id()); 
 		}
 
-		template< typename Component >
-		constexpr void add( const Component& component ) const {
-            world.add(id(), component ); 
+		template< typename TComponent >
+		constexpr void add( const TComponent& component ) const {
+            world().add(id(), component ); 
 		}
 
-#if CPP11
-		template< typename Component >
-		constexpr void add( Component&& component ) const { 
-            world.add(id(), std::forward(component) ); 
+		template< typename TComponent >
+		constexpr void add( TComponent&& component ) const { 
+            world().add(id(), std::forward<TComponent>(component) ); 
 		}
-#endif
 
 	private:
 		/** Throws if this is null-ent */

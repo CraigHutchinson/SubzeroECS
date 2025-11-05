@@ -42,7 +42,7 @@ namespace SubzeroECS
 
 		typedef std::tuple< Collection<Components>&... > Collections; ///< All component collections
 
-#if 0
+#if 1
 		typedef std::tuple< typename Collection<Components>::Iterator... > CollectionIterators; ///< All omcponent iterators
 #else
 		/// @temp Detect all iterators of same type and use std::array automatically
@@ -87,9 +87,9 @@ namespace SubzeroECS
 
 			operator EntityId() const
 			{ 
-				auto iSubzeroECSty = std::get<0U>(iterators_);
+				auto iEntity = std::get<0U>(iterators_);
 				auto iEnd = std::get<0U>(collections_).end();
-				return (iSubzeroECSty != iEnd) ? iSubzeroECSty->first 
+				return (iEntity != iEnd) ? *iEntity 
 										 : cInvalid_EntityId; 
 			}
 

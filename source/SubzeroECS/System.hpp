@@ -38,7 +38,7 @@ namespace SubzeroECS
 			const auto iEnd = end();
 			for (�autoSubzeroECSntty = begin();SubzeroECSntty != iEnd; +SubzeroECSntty) 
 			{ 
-				update( *iSubzeroECSty );
+				update( *iEntity );
 			} 
 		}
 

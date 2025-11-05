@@ -3,53 +3,47 @@
 #include <gtest/gtest.h>
 
 namespace SubzeroECS {
-namespace Test 
+namespace Test {
+
+TEST(FreeIndexListTest, InitEmpty)
 {
+	FreeIndexList list;
+	EXPECT_TRUE(list.isEmpty());
+}
 
-	TEST_CLASS(FreeIndexList_Test)
-	{
-	public:
+TEST(FreeIndexListTest, InitNotFull)
+{
+	FreeIndexList list;
+	EXPECT_FALSE(list.isFull());
+}
 
-		TEST_METHOD(FreeIndexList_Init_Empty)
-		{
-			FreeIndexList list;
-			ASSERT_TRUE( list.isEmpty() );
-		}
+TEST(FreeIndexListTest, AllocOneIsZero)
+{
+	FreeIndexList list;
+	EXPECT_EQ(list.alloc(), 0u);
+}
 
-		TEST_METHOD(FreeIndexList_Init_NotFull)
-		{
-			FreeIndexList list;
-			ASSERT_FALSE( list.isFull() );
-		}
+TEST(FreeIndexListTest, AllocManyIsSequential)
+{
+	FreeIndexList list;
+	for (FreeIndexList::Index i = 0; i < 32; ++i) {
+		EXPECT_EQ(list.alloc(), i);
+	}
+}
 
-		TEST_METHOD(FreeIndexList_Alloc1_IsZero)
-		{
-			FreeIndexList list;
-			ASSERT_EQ( list.alloc(), 0u );
-		}
-		TEST_METHOD(FreeIndexList_AllocN_IsN)
-		{
-			FreeIndexList list;
-			for ( FreeIndexList::Index i = 0; i < 32; ++i )
-			{ 
-				ASSERT_EQ( list.alloc(), i );
-			}
-		}
+TEST(FreeIndexListTest, AllocOneNotEmpty)
+{
+	FreeIndexList list;
+	list.alloc();
+	EXPECT_FALSE(list.isEmpty());
+}
 
-		TEST_METHOD(FreeIndexList_Alloc1_NotEmpty)
-		{
-			FreeIndexList list;
-			list.alloc();
-			ASSERT_FALSE( list.isEmpty() );
-		}
+TEST(FreeIndexListTest, AllocOneNotFull)
+{
+	FreeIndexList list;
+	list.alloc();
+	EXPECT_FALSE(list.isFull());
+}
 
-		TEST_METHOD(FreeIndexList_Alloc1_NotFull)
-		{
-			FreeIndexList list;
-			list.alloc();
-			ASSERT_FALSE( list.isFull() );
-		}
-	};
-
-} //END: Test
-} //END: SubzeroECS
+} // namespace Test
+} // namespace SubzeroECS

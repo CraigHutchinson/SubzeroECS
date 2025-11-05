@@ -80,7 +80,7 @@ namespace Test
 		ASSERT_FALSE( has<Shoes>(entity) );
 
 		//Global handle
-        EntityId entityId = entity;
+        EntityId entityId = entity.id();
 		ASSERT_TRUE( has<Health>(world,entityId) );
         ASSERT_TRUE( has<Human>(world, entityId) );
 		ASSERT_TRUE( has<Hat>(world,entityId) );
@@ -92,7 +92,7 @@ namespace Test
 		World world;
 		Collection<Human,Health,Hat> collections(world);
 		const Entity entity = world.create(Human(), Health(100), Hat());
-		const EntityId entityId = entity;
+		const EntityId entityId = entity.id();
 
 		//Entity
 		ASSERT_NE( nullptr, &entity.get<Human>() );

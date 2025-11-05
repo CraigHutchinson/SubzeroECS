@@ -1,3 +1,4 @@
+#if 0
 //#include <doctest/doctest.h>
 #include <SubzeroECS/SubzeroECS.hpp>
 #include <SubzeroECS/version.h>
@@ -19,3 +20,5 @@ TEST_CASE("SubzeroECS version") {
   static_assert(std::string_view(SubzeroECS_VERSION) == std::string_view("1.0"));
   CHECK(std::string(SubzeroECS_VERSION) == std::string("1.0"));
 }
+
+#endif

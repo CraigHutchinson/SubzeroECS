@@ -62,9 +62,11 @@ namespace SubzeroECS
 	template<class Lhs, class Value>
 	struct GreaterOp : QueryValueOp<Lhs,Value>
 	{
-		GreaterOp( const Lhs& lhs, const Value& value ) : QueryValueOp(lhs,value) {}
+		GreaterOp( const Lhs& lhs, const Value& value ) : QueryValueOp<Lhs,Value>(lhs,value) {}
 		constexpr bool operator() (const Entity& entity) const
-		{ return false; }//lhs_(entity) > value_; }
+		{ 
+			return this->lhs_(entity) > this->value_; 
+		}
 	};
 
 	/* Logical-greater query object '>'
@@ -82,7 +84,7 @@ namespace SubzeroECS
 	template<class Lhs, class Value>
 	struct GreaterEqualOp : QueryValueOp<Lhs,Value>
 	{
-		GreaterEqualOp( const Lhs& lhs, const Value& value ) : QueryValueOp(lhs,value) {}
+		GreaterEqualOp( const Lhs& lhs, const Value& value ) : QueryValueOp<Lhs,Value>(lhs,value) {}
 		
 		constexpr bool operator() (const Entity& entity) const
 		{ return this->lhs_(entity) >= this->value_; }
@@ -102,7 +104,7 @@ namespace SubzeroECS
 	template<class Lhs, class Value>
 	struct LessOp : QueryValueOp<Lhs,Value>
 	{
-		LessOp( const Lhs& lhs, const Value& value ) : QueryValueOp(lhs,value) {}
+		LessOp( const Lhs& lhs, const Value& value ) : QueryValueOp<Lhs,Value>(lhs,value) {}
 		constexpr bool operator() (const Entity& entity) const
 		{ return this->lhs_(entity) < this->value_; }
 	};
@@ -122,7 +124,7 @@ namespace SubzeroECS
 	template<class Lhs, class Value>
 	struct LessEqualOp : QueryValueOp<Lhs,Value>
 	{
-		LessEqualOp( const Lhs& lhs, const Value& value ) : QueryValueOp(lhs,value) {}
+		LessEqualOp( const Lhs& lhs, const Value& value ) : QueryValueOp<Lhs,Value>(lhs,value) {}
 		constexpr bool operator() (const Entity& entity) const
 		{ return this->lhs_(entity) <= this->value_; }
 	};

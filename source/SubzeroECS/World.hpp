@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <utility> //< std::forward
 
 #include "Entity.hpp"
 #include "CollectionRegistry.hpp"
@@ -26,15 +27,13 @@ namespace SubzeroECS
 			return Entity( *this, entityId );
 		} 
 
-#if CPP11
 		template<typename... Components>
 		Entity create(Components&&... items)
 		{
 			EntityId entityId = newEntityId();
-			std::tuple<Components*...> comps( collections_.get<Components>().create(entityId, std::forward(items))... );
+			std::tuple<Components*...> comps( collections_.get<Components>().create(entityId, std::forward<Components>(items))... );
 			return Entity( *this, entityId );
 		}
-#endif
 
 		template<typename Component>
 		void add( EntityId entityId, const Component& item )
@@ -42,13 +41,11 @@ namespace SubzeroECS
 			collections_.get<Component>().create(entityId, item );
 		}
 
-#if CPP11
 		template<typename Component>
 		void add( EntityId entityId, Component&& item )
 		{
-			collections_.get<Component>().create(entityId, std::forward(item));
+			collections_.get<Component>().create(entityId, std::forward<Component>(item));
 		}
-#endif
 
 		template<typename Component>
 		bool has( EntityId entityId )
@@ -95,18 +92,16 @@ namespace SubzeroECS
 		return add(entity.world(), entity.id(), component);
 	}
 
-#if CPP11
 	template< typename Component >
 	void add(World& world, const EntityId entityId, Component&& component)
 	{
-		world.add(entityId, std::forward(component));
+		world.add(entityId, std::forward<Component>(component));
 	}
 
 	template< typename Component >
 	void add(const Entity& entity, Component&& component)
 	{
-		add(entity.world(), entity.id(), std::forward(component));
+		add(entity.world(), entity.id(), std::forward<Component>(component));
 	}
-#endif
 
 } //END: SubzeroECS
