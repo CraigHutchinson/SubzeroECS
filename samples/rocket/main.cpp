@@ -1,6 +1,7 @@
 #include "SubzeroECS/World.hpp"
 #include "SubzeroECS/Collection.hpp"
 #include "SubzeroECS/View.hpp"
+#include "SubzeroECS/System.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -32,30 +33,40 @@ struct ScreenBounds
 };
 
 // Systems
-void movementSystem(SubzeroECS::World& world, float deltaTime)
+class MovementSystem : public SubzeroECS::System<MovementSystem, Position, Velocity>
 {
-	SubzeroECS::View<Position, Velocity> view(world);
+public:
+	float deltaTime = 0.0f;
 	
-	for (auto entity : view)
+	MovementSystem(SubzeroECS::World& world) 
+		: SubzeroECS::System<MovementSystem, Position, Velocity>(world)
+	{}
+	
+	void processEntity(Iterator iEntity)
 	{
-		Position& pos = entity.get<Position>();
-		const Velocity& vel = entity.get<Velocity>();
-		
+		Position& pos = iEntity.get<Position>();
+		const Velocity& vel = iEntity.get<Velocity>();
+
 		pos.x += vel.dx * deltaTime;
 		pos.y += vel.dy * deltaTime;
 	}
-}
+};
 
-void wrappingSystem(SubzeroECS::World& world, const ScreenBounds& bounds)
+class WrappingSystem : public SubzeroECS::System<WrappingSystem, Position, Velocity, Rocket>
 {
-	SubzeroECS::View<Position, Velocity, Rocket> view(world);
+public:
+	ScreenBounds bounds{60, 20};
 	
-	for (auto entity : view)
+	WrappingSystem(SubzeroECS::World& world)
+		: SubzeroECS::System<WrappingSystem, Position, Velocity, Rocket>(world)
+	{}
+	
+	void processEntity(Iterator iEntity)
 	{
-		Position& pos = entity.get<Position>();
-		Velocity& vel = entity.get<Velocity>();
-		Rocket& rocket = entity.get<Rocket>();
-		
+		Position& pos = iEntity.get<Position>();
+		Velocity& vel = iEntity.get<Velocity>();
+		Rocket& rocket = iEntity.get<Rocket>();
+
 		// Wrap horizontally
 		if (pos.x >= bounds.width)
 		{
@@ -86,23 +97,43 @@ void wrappingSystem(SubzeroECS::World& world, const ScreenBounds& bounds)
 			rocket.symbol = (vel.dx > 0) ? '>' : '<';
 		}
 	}
-}
+};
 
-void renderSystem(SubzeroECS::World& world, int screenWidth, int screenHeight)
+class RenderSystem : public SubzeroECS::System<RenderSystem, Position, Rocket>
 {
-	// Clear screen
-	std::cout << "\033[2J\033[H"; // ANSI escape codes to clear screen
+public:
+	int screenWidth = 60;
+	int screenHeight = 20;
+	std::vector<std::vector<char>> buffer;
 	
-	// Create a simple ASCII buffer
-	std::vector<std::vector<char>> buffer(screenHeight, std::vector<char>(screenWidth, ' '));
-	
-	// Render rockets
-	SubzeroECS::View<Position, Rocket> view(world);
-	
-	for (auto entity : view)
+	RenderSystem(SubzeroECS::World& world)
+		: SubzeroECS::System<RenderSystem, Position, Rocket>(world)
 	{
-		const Position& pos = entity.get<Position>();
-		const Rocket& rocket = entity.get<Rocket>();
+		buffer.resize(screenHeight, std::vector<char>(screenWidth, ' '));
+	}
+	
+	void update() override
+	{
+		// Clear screen
+		std::cout << "\033[2J\033[H"; // ANSI escape codes to clear screen
+		
+		// Clear buffer
+		for (auto& row : buffer)
+		{
+			std::fill(row.begin(), row.end(), ' ');
+		}
+		
+		// Update buffer with all rockets
+		SubzeroECS::System<Position, Rocket>::update();
+		
+		// Draw to screen
+		drawBuffer();
+	}
+	
+	void processEntity(Iterator iEntity)
+	{
+		const Position& pos = iEntity.get<Position>();
+		const Rocket& rocket = iEntity.get<Rocket>();
 		
 		int x = static_cast<int>(pos.x);
 		int y = static_cast<int>(pos.y);
@@ -113,23 +144,27 @@ void renderSystem(SubzeroECS::World& world, int screenWidth, int screenHeight)
 		}
 	}
 	
-	// Draw top border
-	std::cout << '+' << std::string(screenWidth, '-') << '+' << '\n';
-	
-	// Draw buffer
-	for (const auto& row : buffer)
+private:
+	void drawBuffer()
 	{
-		std::cout << '|';
-		for (char c : row)
+		// Draw top border
+		std::cout << '+' << std::string(screenWidth, '-') << '+' << '\n';
+		
+		// Draw buffer
+		for (const auto& row : buffer)
 		{
-			std::cout << c;
+			std::cout << '|';
+			for (char c : row)
+			{
+				std::cout << c;
+			}
+			std::cout << '|' << '\n';
 		}
-		std::cout << '|' << '\n';
+		
+		// Draw bottom border
+		std::cout << '+' << std::string(screenWidth, '-') << '+' << '\n';
 	}
-	
-	// Draw bottom border
-	std::cout << '+' << std::string(screenWidth, '-') << '+' << '\n';
-}
+};
 
 int main()
 {
@@ -169,24 +204,35 @@ int main()
 	std::cout << "Starting simulation...\n\n";
 	std::this_thread::sleep_for(std::chrono::seconds(1));
 	
+	// Create systems
+	MovementSystem movementSystem(world);
+	WrappingSystem wrappingSystem(world);
+	wrappingSystem.bounds = bounds;
+	
+	RenderSystem renderSystem(world);
+	renderSystem.screenWidth = screenWidth;
+	renderSystem.screenHeight = screenHeight;
+
+    std::array<SubzeroECS::ISystem*, 3> systems = { &movementSystem, &wrappingSystem, &renderSystem };
+
 	// Game loop
-	const float deltaTime = 0.1f; // 100ms per frame
+	const float deltaTime = 0.30f; // 100ms per frame
 	const int maxFrames = 100;  // Extended to see more wrapping
 	int frame = 0;
 	
 	while (frame < maxFrames)
 	{
 		// Update systems
-		movementSystem(world, deltaTime);
-		wrappingSystem(world, bounds);
-		
-		// Render
-		renderSystem(world, screenWidth, screenHeight);
-		
+		movementSystem.deltaTime = deltaTime;
+        for ( auto system : systems )
+        {
+            system->update();
+        }
+
 		std::cout << "Frame: " << frame << " / " << maxFrames << "\n";
 		
 		// Sleep to control frame rate
-		std::this_thread::sleep_for(std::chrono::milliseconds(30));
+		std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(deltaTime * 1000)));
 		
 		frame++;
 	}

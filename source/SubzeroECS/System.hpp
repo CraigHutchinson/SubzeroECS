@@ -6,43 +6,48 @@
 
 namespace SubzeroECS
 {
-#if 1
+	// Base interface for type-erased system storage
 	class ISystem
 	{
 	public:
-
-		/** Update the system which wil call update(SubzeroECS::EntityId) for each entity in view
-		 */
+		virtual ~ISystem() = default;
 		virtual void update() = 0;
-	
-	protected:
-		/** Update function called for each entity matching the system view
-		 * @param[in]  entityId  The entity entity identifier for reference		 
-		 */
-		virtual void update( const SubzeroECS::EntityId entityId ) = 0;
 	};
 
-	template< typename... Components >
+	// CRTP-based System class for zero-overhead virtual calls
+	template<typename Derived, typename... Components>
 	class System : public ISystem, protected View<Components...>
 	{
 	public:
-		/** @note C++11 std::make_tuple
-		*/
-		System( CollectionRegistry& registry )
-			: View( registry )
+		using ViewType = View<Components...>;
+		using Iterator = typename ViewType::Iterator;
+
+		System(CollectionRegistry& registry)
+			: View<Components...>(registry)
+			, registry_(registry)
 		{
 		}
 
-		virtual void update() override
+		// Non-virtual update that calls derived class's processEntity
+		void update() override final
 		{
-			const auto iEnd = end();
-			for (auto iEntity = begin(); iEntity != iEnd; ++iEntity)
-			{ 
-				update( *iEntity );
-			} 
+			const auto iEnd = this->ViewType::end();
+			for (auto iEntity = this->ViewType::begin(); iEntity != iEnd; ++iEntity)
+			{
+				static_cast<Derived*>(this)->processEntity(iEntity);
+			}
 		}
 
+	protected:
+		// Helper to get a component by EntityId
+		template<typename Component>
+		Component& get(SubzeroECS::EntityId entityId)
+		{
+			return registry_.get<Component>().get(entityId);
+		}
+
+	private:
+		CollectionRegistry& registry_;
 	};
-#endif
 
 } //END: SubzeroECS
