@@ -26,7 +26,7 @@ namespace Test {
 	{
 
 	World world;
-	Collection<Human,Health,Hat> collections(world.collectionRegistry());
+	Collection<Human,Health,Hat> collections(world);
 	(void)world.create(Human(), Health(cHealthPercent), Hat());
 
 	ASSERT_TRUE( has<Health>(world) );

@@ -125,7 +125,7 @@ private:
 		{
 		}
 
-		/** Remove the isnatcne for a registry
+		/** Remove the instance of a registry
 		*/
 		virtual void clear( const size_t registryId )
 		{

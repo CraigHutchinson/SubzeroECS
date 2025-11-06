@@ -13,7 +13,7 @@ namespace Test {
 TEST(LogicalTest, LogicalQueryHas)
 {
 	World world;
-	Collection<Human> collections(world.collectionRegistry());
+	Collection<Human> collections(world);
 	Entity entity = world.create(Human());
 
 	EXPECT_TRUE(entity % Has<Human>());
@@ -23,7 +23,7 @@ TEST(LogicalTest, LogicalQueryHas)
 TEST(LogicalTest, LogicalQueryAndHas)
 {
 	World world;
-	Collection<Human, Health, Hat> collections(world.collectionRegistry());
+	Collection<Human, Health, Hat> collections(world);
 	Entity entity = world.create(Human(), Health{100}, Hat());
 
 	EXPECT_TRUE(entity % (Has<Human>() && Has<Health>()));
@@ -39,7 +39,7 @@ TEST(LogicalTest, LogicalQueryAndHas)
 TEST(LogicalTest, LogicalQueryObject)
 {
 	World world;
-	Collection<Human, Health, Hat> collections(world.collectionRegistry());
+	Collection<Human, Health, Hat> collections(world);
 	Entity entityA = world.create(Human(), Health{100}, Hat());
 	Entity entityB = world.create(Human(), Hat());
 
@@ -53,7 +53,7 @@ TEST(LogicalTest, LogicalQueryObject)
 TEST(LogicalTest, LogicalQueryAndGreater)
 {
 	World world;
-	Collection<Human, Health, Hat> collections(world.collectionRegistry());
+	Collection<Human, Health, Hat> collections(world);
 	Entity entity = world.create(Human(), Health{100}, Hat());
 
 	static_assert( Health{100} > Health{99} ); //Sanity check
@@ -66,7 +66,7 @@ TEST(LogicalTest, LogicalQueryAndGreater)
 TEST(LogicalTest, LogicalQueryAndGreaterEqual)
 {
 	World world;
-	Collection<Human, Health, Hat> collections(world.collectionRegistry());
+	Collection<Human, Health, Hat> collections(world);
 	Entity entity = world.create(Human(), Health{100}, Hat());
 
 	static_assert( Health{100} >= Health{100} ); //Sanity check
@@ -79,7 +79,7 @@ TEST(LogicalTest, LogicalQueryAndGreaterEqual)
 TEST(LogicalTest, LogicalQueryAndLess)
 {
 	World world;
-	Collection<Human, Health, Hat> collections(world.collectionRegistry());
+	Collection<Human, Health, Hat> collections(world);
 	Entity entity = world.create(Human(), Health{100}, Hat());
 	EXPECT_TRUE(entity % (Has<Human>() && (Has<Health>() < Health{101})));
 	EXPECT_FALSE(entity % (Has<Human>() && (Has<Health>() < Health{100})));
@@ -88,7 +88,7 @@ TEST(LogicalTest, LogicalQueryAndLess)
 TEST(LogicalTest, LogicalQueryAndLessEqual)
 {
 	World world;
-	Collection<Human, Health, Hat> collections(world.collectionRegistry());
+	Collection<Human, Health, Hat> collections(world);
 	Entity entity = world.create(Human(), Health{100}, Hat());
 	auto queryExpr = (Has<Human>() && (Has<Health>() <= Health{100}));
 	EXPECT_TRUE(entity % queryExpr);
@@ -100,7 +100,7 @@ TEST(LogicalTest, LogicalQueryAndLessEqual)
 TEST(LogicalTest, WorldHasSingle)
 {
 World world;
-Collection<Human,Health,Hat> collections(world.collectionRegistry());
+Collection<Human,Health,Hat> collections(world);
 Entity entity = world.create(Human(), Health(cHealthPercent), Hat());
 
 using Has;

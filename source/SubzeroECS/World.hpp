@@ -8,18 +8,12 @@
 
 namespace SubzeroECS
 {
-	class World
+	class World : public CollectionRegistry
 	{
 	public:
 		World()
 		: lastEntityId_(EntityId::Invalid)
 		{}
-
-		CollectionRegistry& collectionRegistry()
-		{ return collections_; }
-
-		const CollectionRegistry& collectionRegistry() const
-		{ return collections_; }
 
 		Entity create()
 		{
@@ -31,43 +25,39 @@ namespace SubzeroECS
 		Entity create(Components&&... items)
 		{
 			EntityId entityId = newEntityId();
-			std::tuple<Components*...> comps( collections_.get<Components>().create(entityId, std::forward<Components>(items))... );
+			std::tuple<Components*...> comps( CollectionRegistry::get<Components>().create(entityId, std::forward<Components>(items))... );
 			return Entity( *this, entityId );
 		}
 
 		template<typename Component>
 		void add( EntityId entityId, const Component& item )
 		{
-			collections_.get<Component>().create(entityId, item );
+			CollectionRegistry::get<Component>().create(entityId, item );
 		}
 
 		template<typename Component>
 		void add( EntityId entityId, Component&& item )
 		{
-			collections_.get<Component>().create(entityId, std::forward<Component>(item));
+			CollectionRegistry::get<Component>().create(entityId, std::forward<Component>(item));
 		}
 
 		template<typename Component>
 		bool has( EntityId entityId )
 		{ 
-			Collection<Component>* collection = collections_.find<Component>();
+			Collection<Component>* collection = CollectionRegistry::find<Component>();
 			return (collection != nullptr) && collection->has(entityId); 
 		}
 
 		template<typename Component>
 		Component* find( EntityId entityId )
 		{
-			Collection<Component>* collection = collections_.find<Component>();
+			Collection<Component>* collection = CollectionRegistry::find<Component>();
 			return (collection != nullptr) ? collection->find(entityId) : nullptr; 
 		}
 
 		template<typename Component>
 		Component& get( EntityId entityId )
-		{ return collections_.get<Component>().get(entityId); }
-
-		//TODO: fix as shoulnd't happen like this!
-		operator CollectionRegistry&()
-		{ return collections_; }
+		{ return CollectionRegistry::get<Component>().get(entityId); }
 
 	private:
 
@@ -76,7 +66,6 @@ namespace SubzeroECS
 
 	private:
 		EntityId lastEntityId_; //< Id of the last created entity where (0 is invalid/null)
-		CollectionRegistry collections_;
 	};
 
 

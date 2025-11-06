@@ -124,7 +124,7 @@ namespace Test
 		float cHealthPercent = rand() * (100.0f/float(RAND_MAX)); //< Random to ensure component memory initialised
 
 		World world;
-		Collection<Health> collections(world.collectionRegistry());
+		Collection<Health> collections(world);
 		Entity entity = world.create( Health{cHealthPercent} );
 
 		ASSERT_EQ( cHealthPercent, entity.get<Health>().percent );
@@ -196,7 +196,7 @@ namespace Test
 	TEST(Entity,Add)
 	{
 		World world;
-		Collection<Human,Health,Hat,Shoes> collections(world.collectionRegistry());
+		Collection<Human,Health,Hat,Shoes> collections(world);
 		Entity entity = world.create(Human());
 
 		ASSERT_TRUE( has<Human>(entity) );
@@ -230,7 +230,7 @@ namespace Test
 		float cHealthShoeSize = rand() * (12.0f/float(RAND_MAX)); //< Random to ensure component memory initialised
 
 		World world;
-		Collection<Health,Shoes> collections(world.collectionRegistry());
+		Collection<Health,Shoes> collections(world);
 		Entity entity = world.create();
 
 		entity.add( Health{cHealthPercent} );
@@ -244,7 +244,7 @@ namespace Test
 	TEST(Entity,GetMore)
 	{
 	World world;
-	Collection<Human,Health,Hat> collections(world.collectionRegistry());
+	Collection<Human,Health,Hat> collections(world);
 	Entity entity = world.create(Human(), Health(cHealthPercent), Hat());
 
 	std::tuple<Human,Health,Hat> hhh = get<Human,Health,Hat>(entity);
@@ -255,7 +255,7 @@ namespace Test
 	const float cHealthPercent = cHealthPercent;
 
 	World world;
-	Collection<Human,Health,Hat> collections(world.collectionRegistry());
+	Collection<Human,Health,Hat> collections(world);
 	(void)world.create(Human(), Health(cHealthPercent), Hat());
 	(void)world.create(Human(), Health(cHealthPercent) );
 	(void)world.create(Human());
@@ -274,7 +274,7 @@ namespace Test
 	TEST_METHOD(WorldHasSingle)
 	{
 	World world;
-	Collection<Human,Health,Hat> collections(world.collectionRegistry());
+	Collection<Human,Health,Hat> collections(world);
 	Entity entity = world.create(Human(), Health(cHealthPercent), Hat());
 
 	using Has;
