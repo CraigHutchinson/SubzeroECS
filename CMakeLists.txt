@@ -12,6 +12,7 @@ include(Version)
 project( SubzeroECS VERSION ${VERSION_SEMANTIC}
   LANGUAGES CXX
 )
+set (CMAKE_CXX_STANDARD 20)
 
 if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   message(
@@ -25,12 +26,31 @@ CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.11.0")
 
 find_package(fmt REQUIRED)
 
-# Note: globbing sources is considered bad practice as CMake's generators may not detect new files
-# automatically. Keep that in mind when changing files, or explicitly mention them here.
-file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.hpp")
-file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp")
-
-add_library(${PROJECT_NAME} ${headers} ${sources})
+add_library(${PROJECT_NAME})
+target_sources(${PROJECT_NAME}
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Collection.hpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Collection.hpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/CollectionRegistry.hpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Entity.hpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/EntityId.hpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/FreeIndexList.hpp 
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/GlobalUniqueIndex.hpp 
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Has.hpp 
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Logical.hpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Mask.hpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Query.hpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/SubzeroECS.hpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/System.hpp 
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Utility/StructOfVector.hpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/View.hpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/World.hpp
+  PRIVATE 
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/CollectionRegistry.cpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/FreeIndexList.cpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/GlobalUniqueIndex.cpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Mask.cpp
+    )
 
 set_target_properties(${PROJECT_NAME} 
   PROPERTIES 

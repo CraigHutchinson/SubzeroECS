@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.14...3.22)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
 
 project(SubzeroECSTests LANGUAGES CXX)
+set (CMAKE_CXX_STANDARD 20)
 
 # ---- Options ----
 
@@ -35,13 +36,17 @@ endif()
 # ---- Create binary ----
 
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp)
-add_executable(${PROJECT_NAME} ${sources})
+add_executable(${PROJECT_NAME})
+target_sources( ${PROJECT_NAME} PRIVATE ${sources} )
+
 target_link_libraries(${PROJECT_NAME} 
     #doctest::doctest 
     GTest::Main
     SubzeroECS::SubzeroECS
 )
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+set_target_properties(${PROJECT_NAME} 
+  PROPERTIES 
+    CXX_STANDARD 20)
 
 # enable compiler warnings
 if(NOT TEST_INSTALLED_VERSION)

@@ -135,9 +135,9 @@ namespace SubzeroECS
 			// Check if all iterators point to the same Entity or all point to end
 			bool isAtValid()
 			{
-				if constexpr (sizeof...(Components) <= 1)
+				if constexpr (sizeof...(Components) == 1)
 				{
-					// None or Single component - always valid or at end
+					// Single component - always valid or at end
 					return true;
 				}
 				else
@@ -228,13 +228,7 @@ namespace SubzeroECS
 				// Incrementing at end is an error
 				assert(std::get<0>(iterators_) != std::get<0>(collections_).end());
 
-				// Set-intersection operation over all component collections			
-				if constexpr (sizeof...(Components) == 0)
-				{
-					// No components - empty view, always at end
-					// Nothing to increment
-				}
-				else if constexpr (sizeof...(Components) == 1)
+				if constexpr (sizeof...(Components) == 1)
 				{
 					// Single component - just advance the iterator
 					++std::get<0>(iterators_);
@@ -309,6 +303,37 @@ namespace SubzeroECS
 		{ return Iterator( collections_, Iterators( getCollection<Components>().end()... )  ); }
 	private:
 		Collections collections_;
+	};
+
+	/** Specialization of View for zero components - represents an empty view
+	 * @remarks This provides a consistent interface for template metaprogramming
+	 *          where the component count might be zero.
+	 */
+	template<>
+	class View<>
+	{
+	public:
+		static constexpr uint_fast32_t Size = 0U;
+
+		/** Empty iterator that is always at end */
+		class Iterator
+		{
+		public:
+			Iterator() = default;
+
+			Iterator& operator++() { return *this; }
+			Iterator& operator*() { return *this; }
+			
+			bool operator==(const Iterator&) const { return true; }
+			bool operator!=(const Iterator&) const { return false; }
+			
+			operator EntityId() const { return EntityId::Invalid; }
+		};
+
+		explicit View(CollectionRegistry&) {}
+
+		Iterator begin() const { return Iterator{}; }
+		Iterator end() const { return Iterator{}; }
 	};
 
 } //END: SubzeroECS

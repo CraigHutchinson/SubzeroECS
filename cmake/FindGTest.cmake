@@ -5,8 +5,7 @@ include(CPM)
 CPMAddPackage(
 	NAME googletest
 	GITHUB_REPOSITORY google/googletest
-	GIT_TAG release-1.12.1
-	VERSION 1.12.1
+	VERSION 1.17.0
 	EXCLUDE_FROM_ALL true
 	OPTIONS 
 		"INSTALL_GTEST OFF" 
