@@ -6,6 +6,13 @@ struct Human
 {
 };
 
+struct Age
+{
+	uint32_t age;
+
+	constexpr auto operator<=>(const Age& rhs) const = default;
+};
+
 struct Health
 {
 	float percent;

@@ -74,7 +74,7 @@ namespace SubzeroECS
 			{
 				// Advance to first valid iterator position
 				if ( !isAtValid() )
-					advanceToValid();
+					advance();
 			}
 
 			template< typename Component>
@@ -85,23 +85,59 @@ namespace SubzeroECS
 					std::get<iComponent>(iterators_) );
 			}
 
+			template< typename Component>
+			bool has()
+			{
+				static const uint32_t iComponent = get_type_index<Component, Components...>::value;
+				auto it = std::get<iComponent>(iterators_);
+				auto iend = std::get<iComponent>(collections_).end();
+				return it != iend && *it == this->operator EntityId();
+			}
+
 			Iterator& operator++()
 			{
 				// Advance to next valid iterator position
-				return advanceToValid();
+				return advance();
 			}
 
+			bool operator != ( const Iterator& rhs ) const
+			{ 
+				return iterators_ != rhs.iterators_; 
+			}
+
+			bool operator == ( const Iterator& rhs ) const
+			{ 
+				return iterators_ == rhs.iterators_; 
+			}
+
+			operator EntityId() const
+			{ 
+				auto iEntity = std::get<0U>(iterators_);
+				assert(iEntity != std::get<0U>(collections_).end());
+				return *iEntity;
+			}
+
+			Iterator& operator*()
+			{
+				return *this;
+			}
+
+		private:
+
+			template<size_t index>
+			static EntityId getId( auto& its, auto& iends )
+			{
+				return (std::get<index>(its) != std::get<index>(iends))
+					? *std::get<index>(its)
+					: EntityId::Invalid;
+			}
+			
 			// Check if all iterators point to the same Entity or all point to end
 			bool isAtValid()
 			{
-				if constexpr (sizeof...(Components) == 0)
+				if constexpr (sizeof...(Components) <= 1)
 				{
-					// No components - empty view, always at end
-					return true;
-				}
-				else if constexpr (sizeof...(Components) == 1)
-				{
-					// Single component - always valid or at end
+					// None or Single component - always valid or at end
 					return true;
 				}
 				else
@@ -111,7 +147,7 @@ namespace SubzeroECS
 					{
 						// get all EntityIds from the iterators
 						std::array<EntityId, sizeof...(Components)> iEntityIds = { 
-							(pairings.second == pairings.first.end() ? cInvalid_EntityId : *pairings.second)... };
+							(pairings.second == pairings.first.end() ? EntityId::Invalid : *pairings.second)... };
 
 						// If all are equal to first or all are at end then valid
 						return std::all_of(iEntityIds.begin(), iEntityIds.end()
@@ -120,21 +156,16 @@ namespace SubzeroECS
 				}
 			}
 
-		public:
 			// Helper for N-way intersection (N >= 3)
 			template<std::size_t... Is>
-			Iterator& advanceToValidN( std::index_sequence<Is...> )
+			Iterator& advanceN( std::index_sequence<Is...> )
 			{
-				// Three-or-more-way intersection
+				// 2-or-more-way intersection
 				auto its = std::make_tuple( std::ref(std::get<Is>(iterators_))... );
 				auto iends = std::make_tuple( std::get<Is>(collections_).end()... );
 
-
-				
 				auto notAnyAtEnd = [&its, &iends]() {
-					bool anyAtEnd = false;
-					((anyAtEnd = anyAtEnd || (std::get<Is>(its) == std::get<Is>(iends))), ...);
-					return !anyAtEnd;
+					return ((std::get<Is>(its) != std::get<Is>(iends)) && ...);
 				};
 
 				auto setAllAtEnd = [&its, &iends]() {
@@ -142,45 +173,41 @@ namespace SubzeroECS
 				};
 
 				auto idsAllMatch = [&its]() {
-					EntityId firstId = *std::get<0>(its);
-					bool allMatch = true;
-					((allMatch = allMatch && (*std::get<Is>(its) == firstId)), ...);
-					return allMatch;
+					if constexpr (sizeof...(Is) <= 1)
+						return true;
+					else
+					{
+						EntityId firstId = *std::get<0>(its);
+						return ((Is == 0 || *std::get<Is>(its) == firstId) && ...);
+					}
 				};
 
 				// Update all iterators that are less than max and update max accordingly
 				auto incrementIfLessThanMaxId = [&its, &iends]( EntityId validId ) {
 					EntityId maxId = validId;
-					([&]() {
-						while (*std::get<Is>(its) < validId )
-						{
-							//End reached
-							if ( ++std::get<Is>(its) == std::get<Is>(iends))
+					(
+						[&]() {
+							while (*std::get<Is>(its) < validId)
 							{
-								maxId = cInvalid_EntityId;
-								return;
+								++std::get<Is>(its);
+								const auto id = getId<Is>(its, iends);
+								if (id > maxId) // Update max if we found a larger value or EntityId::Invalid if we are at end
+								{
+									maxId = id;
+									break;
+								}
 							}
-
-							// New max
-							if (*std::get<Is>(its) > maxId)
-							{
-								maxId = *std::get<Is>(its);
-								break;
-							}
-						}
-					}(), ...);
+						}()
+					, ...);
 					return maxId;
 				};
 
-				// Incrementing at end is an error
-				assert (std::get<0>(its) != std::get<0>(iends));
-
 				// Advance past the current position
 				++std::get<0>(its);
-				EntityId maxId = std::get<0>(its) != std::get<0>(iends) ? *std::get<0>(its) : cInvalid_EntityId;
+				EntityId maxId = getId<0>(its, iends);
 
 				// Find next intersection point
-				while ( maxId != cInvalid_EntityId )
+				while ( maxId != EntityId::Invalid )
 				{
 					// Advance all iterators that are less than max
 					EntityId nextValidId = incrementIfLessThanMaxId(maxId);
@@ -196,8 +223,11 @@ namespace SubzeroECS
 				return *this;
 			}
 
-			Iterator& advanceToValid()
+			Iterator& advance()
 			{
+				// Incrementing at end is an error
+				assert(std::get<0>(iterators_) != std::get<0>(collections_).end());
+
 				// Set-intersection operation over all component collections			
 				if constexpr (sizeof...(Components) == 0)
 				{
@@ -209,6 +239,7 @@ namespace SubzeroECS
 					// Single component - just advance the iterator
 					++std::get<0>(iterators_);
 				}
+#if 0 // TODO: Profile vs the generic option! 
 				else if constexpr (sizeof...(Components) == 2)
 				{
 					// Two-way intersection using classic std::set_intersection algorithm
@@ -236,36 +267,14 @@ namespace SubzeroECS
 					// No more intersections, set both to end
 					it1 = end1;
 					it2 = end2;
-				}
+				}	
+#endif
 				else
 				{
-					advanceToValidN( std::make_index_sequence<sizeof...(Components)>{} );
+					advanceN( std::make_index_sequence<sizeof...(Components)>{} );
 				}
 				return *this;
 			}		
-
-			bool operator != ( const Iterator& rhs ) const
-			{ 
-				return iterators_ != rhs.iterators_; 
-			}
-
-			bool operator == ( const Iterator& rhs ) const
-			{ 
-				return iterators_ == rhs.iterators_; 
-			}
-
-			operator EntityId() const
-			{ 
-				auto iEntity = std::get<0U>(iterators_);
-				auto iEnd = std::get<0U>(collections_).end();
-				return (iEntity != iEnd) ? *iEntity 
-										 : cInvalid_EntityId; 
-			}
-
-			Iterator& operator*()
-			{
-				return *this;
-			}
 
 		private:
 			Collections collections_;

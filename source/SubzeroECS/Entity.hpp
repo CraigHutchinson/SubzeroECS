@@ -77,7 +77,7 @@ namespace SubzeroECS
 
 	protected:
 		World* world_ = nullptr;
-		EntityId id_ = cInvalid_EntityId;
+		EntityId id_ = EntityId::Invalid;
 	};
 
 	/** Equality to test entityId and world are equal
@@ -86,7 +86,7 @@ namespace SubzeroECS
 	inline bool operator ==( const Entity& lhs, const Entity& rhs)
 	{
 		return (lhs.id() == rhs.id()) 
-			&& ((lhs.id() == 0U) || (&lhs.world() == &rhs.world()));
+			&& ((lhs.id() == EntityId::Invalid) || (&lhs.world() == &rhs.world()));
 	}
 
 	/** @see operator==(const Entity&,const Entity&)

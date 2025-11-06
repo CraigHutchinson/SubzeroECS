@@ -12,7 +12,7 @@ namespace SubzeroECS
 	{
 	public:
 		World()
-		: nextEntityId_( cInvalid_EntityId + 1U /*@note 0u is invalid*/ )
+		: lastEntityId_(EntityId::Invalid)
 		{}
 
 		CollectionRegistry& collectionRegistry()
@@ -72,10 +72,10 @@ namespace SubzeroECS
 	private:
 
 		EntityId newEntityId()
-		{ return nextEntityId_++; }
+		{ return lastEntityId_ = lastEntityId_.next(); }
 
 	private:
-		EntityId nextEntityId_; //< Id of the last created entity where (0 is invalid/null)
+		EntityId lastEntityId_; //< Id of the last created entity where (0 is invalid/null)
 		CollectionRegistry collections_;
 	};
 

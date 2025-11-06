@@ -70,58 +70,131 @@ namespace SubzeroECS {
 		}
 #endif
 
-		TEST( View, Intersect2 )
+		TEST( View, Intersect1_Ids )
+		{
+			World world;
+			Collection<Human> collections(world);
+			View<Human> view(world); 
+
+			for ( auto humanId : { 1U, 2U, 3U, 4U, 5U, 8U, 9U } ) world.add( EntityId{humanId}, Human() );
+			
+			auto iEntity = view.begin();
+			for ( auto expected : { 1U, 2U, 3U, 4U, 5U, 8U, 9U } )
+			{
+				EXPECT_EQ( EntityId{expected}, *iEntity );
+				++iEntity;
+			}
+			EXPECT_EQ( view.end(), iEntity );
+		}
+
+
+		TEST( View, Intersect1_Has )
+		{
+			World world;
+			Collection<Human> collections(world);
+			View<Human> view(world); 
+
+			for ( auto humanId : { 1U, 2U, 3U, 4U, 5U, 8U, 9U } ) world.add( EntityId{humanId}, Human() );
+			
+			auto iEntity = view.begin();
+			for ( auto expected : { 1U, 2U, 3U, 4U, 5U, 8U, 9U } )
+			{
+				(void)expected; //unused
+				EXPECT_TRUE( iEntity.has<Human>() );
+				++iEntity;
+			}
+		}
+
+		TEST( View, Intersect2_Ids )
 		{
 			World world;
 			Collection<Human,Hat> collections(world);
 			View<Human,Hat> view(world); 
 
-			for ( EntityId humanId : { 1, 2, 3, 4, 5, 8, 9 } ) world.add( humanId, Human() );
-			for ( EntityId hatId   : { 1, 5, 6, 7, 8, 9 } ) world.add( hatId, Hat() );
+			for ( auto humanId : { 1U, 2U, 3U, 4U, 5U, 8U, 9U } ) world.add( EntityId{humanId}, Human() );
+			for ( auto hatId   : { 1U, 5U, 6U, 7U, 8U, 9U } ) world.add( EntityId{hatId}, Hat() );
 			
 			auto iEntity = view.begin();
-			for ( EntityId entityId : { 1, 5, 8, 9 } )
+			for ( auto expected : { 1U, 5U, 8U, 9U } )
 			{
-				EXPECT_EQ( entityId, *iEntity );
+				EXPECT_EQ( EntityId{expected}, *iEntity );
 				++iEntity;
 			}
 			EXPECT_EQ( view.end(), iEntity );
 		}
 
-		TEST( View, Intersect3 )
+		TEST( View, Intersect2_Values )
+		{
+			World world;
+			Collection<Health,Shoes> collections(world);
+			View<Health,Shoes> view(world);
+
+			for ( auto id : { 1U, 2U, 3U, 4U, 5U, 8U, 9U } ) world.add( EntityId{id}, Health{id*2.0F} );
+			for ( auto id : { 1U, 5U, 6U, 7U, 8U, 9U } ) world.add( EntityId{id}, Shoes{id*3.0F} );
+
+			auto iEntity = view.begin();
+			for ( auto expected : { 1U, 5U, 8U, 9U } )
+			{
+				EXPECT_EQ( iEntity.get<Health>(), Health{expected*2.0F} );
+				EXPECT_EQ( iEntity.get<Shoes>(), Shoes{expected*3.0F} );
+				++iEntity;
+			}
+		}
+
+		TEST( View, Intersect3_Ids )
 		{
 			World world;
 			Collection<Human,Hat,Health> collections(world);
 			View<Human,Hat,Health> view(world); 
 
-			for ( EntityId humanId  : { 1, 2, 3, 4, 5, 8 } ) world.add( humanId, Human() );
-			for ( EntityId hatId    : { 3, 5, 6, 7, 8, 9, 10 } ) world.add( hatId, Hat() );
-			for ( EntityId healthId : { 1, 3, 5, 8, 9 } ) world.add( healthId, Health{100.0F} );
+			for ( auto humanId  : { 1U, 2U, 3U, 4U, 5U, 8U } ) world.add( EntityId{humanId}, Human() );
+			for ( auto hatId    : { 3U, 5U, 6U, 7U, 8U, 9U, 10U } ) world.add( EntityId{hatId}, Hat() );
+			for ( auto healthId : { 1U, 3U, 5U, 8U, 9U } ) world.add( EntityId{healthId}, Health{100.0F} );
 
 			auto iEntity = view.begin();
-			for ( EntityId entityId : {  3, 5, 8 } )
+			for ( auto expected : {  3U, 5U, 8U } )
 			{
-				EXPECT_EQ( entityId, *iEntity );
+				EXPECT_EQ( EntityId{expected}, *iEntity );
 				++iEntity;
 			}
 			EXPECT_EQ( view.end(), iEntity );
 		}
 
-		TEST( View, Intersect4 )
+		TEST( View, Intersect3_Values )
+		{
+			World world;
+			Collection<Age,Health,Shoes> collections(world);
+			View<Age,Health,Shoes> view(world);
+
+			for ( auto id : { 1U, 2U, 3U, 4U, 5U, 8U } ) world.add( EntityId{id}, Age{id} );
+			for ( auto id : { 3U, 5U, 6U, 7U, 8U, 9U, 10U  } ) world.add( EntityId{id}, Health{id*2.0F} );
+			for ( auto id : { 1U, 3U, 5U, 8U, 9U } ) world.add( EntityId{id}, Shoes{id*3.0F} );
+
+			auto iEntity = view.begin();
+			for ( auto expected : { 3U, 5U, 8U } )
+			{
+				EXPECT_EQ( iEntity.get<Age>(), Age{expected} );
+				EXPECT_EQ( iEntity.get<Health>(), Health{expected*2.0F} );
+				EXPECT_EQ( iEntity.get<Shoes>(), Shoes{expected*3.0F} );
+				++iEntity;
+			}
+		}
+
+		TEST( View, Intersect4_Ids )
 		{
 			World world;
 			Collection<Human,Hat,Health,Glasses> collections(world);
 			View<Human,Hat,Health,Glasses> view(world); 
 
-			for ( EntityId humanId  : { 1, 2, 3, 4, 5, 7, 9 } ) world.add( humanId, Human() );
-			for ( EntityId hatId    : { 3, 5, 6, 7, 8, 9 } ) world.add( hatId, Hat() );
-			for ( EntityId healthId : { 1, 3, 7, 9, 10 } ) world.add( healthId, Health{100.0F} );
-			for ( EntityId glassId  : { 3, 4, 6, 7, 8, 9, 11 } ) world.add( glassId, Glasses() );
+			for ( auto humanId  : { 1U, 2U, 3U, 4U, 5U, 7U, 9U } ) world.add( EntityId{humanId}, Human() );
+			for ( auto hatId    : { 3U, 5U, 6U, 7U, 8U, 9U } ) world.add( EntityId{hatId}, Hat() );
+			for ( auto healthId : { 1U, 3U, 7U, 9U, 10U } ) world.add( EntityId{healthId}, Health{100.0F} );
+			for ( auto glassId  : { 3U, 4U, 6U, 7U, 8U, 9U, 11U } ) world.add( EntityId{glassId}, Glasses() );
 
 			auto iEntity = view.begin();
-			for ( EntityId entityId : {  3, 7, 9 } )
+			for ( auto expected : {  3U, 7U, 9U } )
 			{
-				EXPECT_EQ( entityId, *iEntity );
+				EXPECT_EQ( EntityId{expected}, *iEntity );
 				++iEntity;
 			}
 			EXPECT_EQ( view.end(), iEntity );

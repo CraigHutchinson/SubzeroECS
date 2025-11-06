@@ -12,8 +12,8 @@ namespace Test
 	TEST(Entity,Null)
 	{
 		Entity nullA;
-		Entity nullB( *(World*)0, cInvalid_EntityId );
-		Entity nullC( *(World*)3, cInvalid_EntityId );
+		Entity nullB( *(World*)0, EntityId::Invalid );
+		Entity nullC( *(World*)3, EntityId::Invalid );
 
 		ASSERT_TRUE( nullA.isNull() );
 		ASSERT_TRUE( nullB.isNull() );
@@ -28,34 +28,34 @@ namespace Test
 
 	TEST(Entity,NotNull)
 	{
-		Entity entity( *(World*)456, 123U );
+		Entity entity( *(World*)456, EntityId{123U} );
 		ASSERT_FALSE( entity.isNull() );
 	}
 
 	TEST(Entity,ConstructId)
 	{
-		Entity entity( *(World*)456, 123U );
-		ASSERT_EQ( 123U, entity.id() );
+		Entity entity( *(World*)456, EntityId{123U} );
+		ASSERT_EQ( EntityId{123U}, entity.id() );
 	}
 
 	TEST(Entity,Equality)
 	{
-		Entity entity( *(World*)456, 123U );
-		ASSERT_EQ( Entity(*(World*)456, 123U), entity );
-		ASSERT_NE( Entity(*(World*)456, 124U), entity );
-		ASSERT_NE( Entity(*(World*)455, 123U), entity );
+		Entity entity( *(World*)456, EntityId{123U} );
+		ASSERT_EQ( Entity(*(World*)456, EntityId{123U}), entity );
+		ASSERT_NE( Entity(*(World*)456, EntityId{124U}), entity );
+		ASSERT_NE( Entity(*(World*)455, EntityId{123U}), entity );
 	}
 
 	TEST(Entity,CopyConstruct)
 	{
-		Entity entity( *(World*)456, 123U );
+		Entity entity( *(World*)456, EntityId{123U} );
 		Entity entityB( entity ); //< Entity handle - Has reference to world i.e. struct{ uint32_t, World& }
 		ASSERT_EQ(entityB, entity);
 	}
 
 	TEST(Entity,CopyAssignment)
 	{
-		Entity entity( *(World*)456, 123U );
+		Entity entity( *(World*)456, EntityId{123U} );
 		Entity entityC;
 		entityC = entity;
 		ASSERT_EQ(entityC, entity);
@@ -65,7 +65,7 @@ namespace Test
 	{
 		World world;
 		Collection<Human,Health,Hat> collections(world);
-		Entity entity = world.create(Human(), Health(100), Hat());
+		Entity entity = world.create(Human(), Health{100}, Hat());
 
 		//Member
 		ASSERT_TRUE( entity.has<Health>() );
@@ -91,7 +91,7 @@ namespace Test
 	{
 		World world;
 		Collection<Human,Health,Hat> collections(world);
-		const Entity entity = world.create(Human(), Health(100), Hat());
+		const Entity entity = world.create(Human(), Health{100}, Hat());
 		const EntityId entityId = entity.id();
 
 		//Entity
@@ -125,7 +125,7 @@ namespace Test
 
 		World world;
 		Collection<Health> collections(world.collectionRegistry());
-		Entity entity = world.create( Health(cHealthPercent) );
+		Entity entity = world.create( Health{cHealthPercent} );
 
 		ASSERT_EQ( cHealthPercent, entity.get<Health>().percent );
 	}
@@ -134,7 +134,7 @@ namespace Test
 	{
 		World world;
 		Collection<Human,Health,Hat> collections(world);
-		Entity entity = world.create(Human(), Health(100), Hat());
+		Entity entity = world.create(Human(), Health{100}, Hat());
 
 		//Member
 		ASSERT_NE( nullptr, entity.find<Human>() );
@@ -168,8 +168,8 @@ namespace Test
 
 		World world;
 		Collection<Health,Shoes> collections(world);
-		Entity entity = world.create( Health(cHealthPercent), Shoes(cShoeSize) );
-		Entity entityB = world.create( Health(cHealthPercentB), Shoes(cShoeSizeB) );
+		Entity entity = world.create( Health{cHealthPercent}, Shoes{cShoeSize} );
+		Entity entityB = world.create( Health{cHealthPercentB}, Shoes{cShoeSizeB} );
 
 		ASSERT_EQ( cHealthPercent, entity.find<Health>()->percent);
 		ASSERT_EQ( cShoeSize, entity.find<Shoes>()->size);
@@ -204,7 +204,7 @@ namespace Test
 		ASSERT_FALSE( has<Hat>(entity) );
 		ASSERT_FALSE( has<Shoes>(entity) );
 
-		entity.add( Health(100) );
+		entity.add( Health{100} );
 		ASSERT_TRUE( has<Human>(entity) );
 		ASSERT_TRUE( has<Health>(entity) );
 		ASSERT_FALSE( has<Hat>(entity) );
@@ -216,7 +216,7 @@ namespace Test
 		ASSERT_TRUE( has<Hat>(entity) );
 		ASSERT_FALSE( has<Shoes>(entity) );
 
-		add( world, entity.id(), Shoes(9) );
+		add( world, entity.id(), Shoes{9} );
 		ASSERT_TRUE( has<Human>(entity) );
 		ASSERT_TRUE( has<Health>(entity) );
 		ASSERT_TRUE( has<Hat>(entity) );
@@ -233,10 +233,10 @@ namespace Test
 		Collection<Health,Shoes> collections(world.collectionRegistry());
 		Entity entity = world.create();
 
-		entity.add( Health(cHealthPercent) );
+		entity.add( Health{cHealthPercent} );
 		ASSERT_EQ( cHealthPercent, get<Health>(entity).percent );
 
-		add( world, entity.id(), Shoes(cHealthShoeSize) );
+		add( world, entity.id(), Shoes{cHealthShoeSize} );
 		ASSERT_EQ( cHealthShoeSize, get<Shoes>(entity).size );
 	}
 

@@ -12,7 +12,7 @@ namespace SubzeroECS {
 		{
 			CollectionRegistry collectionRegistry;
 			Collection<Human> humanCollection(collectionRegistry);
-			ASSERT_NE( nullptr, humanCollection.create( 0U, Human() ) );
+			ASSERT_NE( nullptr, humanCollection.create( EntityId{0U}, Human() ) );
 		}
 
 
