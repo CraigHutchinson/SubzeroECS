@@ -1,134 +1,134 @@
-#include "SubzeroECS/FreeIndexList.hpp"
+#include "SubzeroECS/FreeIndexList32.hpp"
 
 #include <gtest/gtest.h>
 
 namespace SubzeroECS {
 namespace Test {
 
-TEST(FreeIndexListTest, InitEmpty)
+TEST(FreeIndexList32Test, InitEmpty)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	EXPECT_TRUE(list.isEmpty());
 }
 
-TEST(FreeIndexListTest, InitNotFull)
+TEST(FreeIndexList32Test, InitNotFull)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	EXPECT_FALSE(list.isFull());
 }
 
-TEST(FreeIndexListTest, AllocOneIsZero)
+TEST(FreeIndexList32Test, AllocOneIsZero)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	EXPECT_EQ(list.alloc(), 0u);
 }
 
-TEST(FreeIndexListTest, AllocManyIsSequential)
+TEST(FreeIndexList32Test, AllocManyIsSequential)
 {
-	FreeIndexList list;
-	for (FreeIndexList::Index i = 0; i < 32; ++i) {
+	FreeIndexList32 list;
+	for (FreeIndexList32::Index i = 0; i < 32; ++i) {
 		EXPECT_EQ(list.alloc(), i);
 	}
 }
 
-TEST(FreeIndexListTest, AllocOneNotEmpty)
+TEST(FreeIndexList32Test, AllocOneNotEmpty)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	list.alloc();
 	EXPECT_FALSE(list.isEmpty());
 }
 
-TEST(FreeIndexListTest, AllocOneNotFull)
+TEST(FreeIndexList32Test, AllocOneNotFull)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	list.alloc();
 	EXPECT_FALSE(list.isFull());
 }
 
-TEST(FreeIndexListTest, AllocAllIsFull)
+TEST(FreeIndexList32Test, AllocAllIsFull)
 {
-	FreeIndexList list;
-	for (FreeIndexList::Index i = 0; i < FreeIndexList::Capacity; ++i) {
+	FreeIndexList32 list;
+	for (FreeIndexList32::Index i = 0; i < FreeIndexList32::Capacity; ++i) {
 		list.alloc();
 	}
 	EXPECT_TRUE(list.isFull());
 }
 
-TEST(FreeIndexListTest, AllocAllNotEmpty)
+TEST(FreeIndexList32Test, AllocAllNotEmpty)
 {
-	FreeIndexList list;
-	for (FreeIndexList::Index i = 0; i < FreeIndexList::Capacity; ++i) {
+	FreeIndexList32 list;
+	for (FreeIndexList32::Index i = 0; i < FreeIndexList32::Capacity; ++i) {
 		list.alloc();
 	}
 	EXPECT_FALSE(list.isEmpty());
 }
 
-TEST(FreeIndexListTest, AllocBeyondCapacityThrows)
+TEST(FreeIndexList32Test, AllocBeyondCapacityThrows)
 {
-	FreeIndexList list;
-	for (FreeIndexList::Index i = 0; i < FreeIndexList::Capacity; ++i) {
+	FreeIndexList32 list;
+	for (FreeIndexList32::Index i = 0; i < FreeIndexList32::Capacity; ++i) {
 		list.alloc();
 	}
-	EXPECT_THROW(list.alloc(), FreeIndexList::AllocFailed);
+	EXPECT_THROW(list.alloc(), FreeIndexList32::AllocFailed);
 }
 
-TEST(FreeIndexListTest, FreeAndReallocSameIndex)
+TEST(FreeIndexList32Test, FreeAndReallocSameIndex)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	auto index = list.alloc();
 	list.free(index);
 	EXPECT_EQ(list.alloc(), index);
 }
 
-TEST(FreeIndexListTest, FreeReturnsToEmpty)
+TEST(FreeIndexList32Test, FreeReturnsToEmpty)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	auto index = list.alloc();
 	list.free(index);
 	EXPECT_TRUE(list.isEmpty());
 }
 
-TEST(FreeIndexListTest, FreeAllReturnsToEmpty)
+TEST(FreeIndexList32Test, FreeAllReturnsToEmpty)
 {
-	FreeIndexList list;
-	FreeIndexList::Index indices[FreeIndexList::Capacity];
+	FreeIndexList32 list;
+	FreeIndexList32::Index indices[FreeIndexList32::Capacity];
 	
-	for (size_t i = 0; i < FreeIndexList::Capacity; ++i) {
+	for (size_t i = 0; i < FreeIndexList32::Capacity; ++i) {
 		indices[i] = list.alloc();
 	}
 	
-	for (size_t i = 0; i < FreeIndexList::Capacity; ++i) {
+	for (size_t i = 0; i < FreeIndexList32::Capacity; ++i) {
 		list.free(indices[i]);
 	}
 	
 	EXPECT_TRUE(list.isEmpty());
 }
 
-TEST(FreeIndexListTest, CountInitiallyZero)
+TEST(FreeIndexList32Test, CountInitiallyZero)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	EXPECT_EQ(list.count(), 0u);
 }
 
-TEST(FreeIndexListTest, CountAfterOneAlloc)
+TEST(FreeIndexList32Test, CountAfterOneAlloc)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	list.alloc();
 	EXPECT_EQ(list.count(), 1u);
 }
 
-TEST(FreeIndexListTest, CountAfterMultipleAlloc)
+TEST(FreeIndexList32Test, CountAfterMultipleAlloc)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	for (size_t i = 0; i < 5; ++i) {
 		list.alloc();
 	}
 	EXPECT_EQ(list.count(), 5u);
 }
 
-TEST(FreeIndexListTest, CountAfterAllocAndFree)
+TEST(FreeIndexList32Test, CountAfterAllocAndFree)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	auto index = list.alloc();
 	list.alloc();
 	list.alloc();
@@ -138,18 +138,18 @@ TEST(FreeIndexListTest, CountAfterAllocAndFree)
 	EXPECT_EQ(list.count(), 2u);
 }
 
-TEST(FreeIndexListTest, CountAtCapacity)
+TEST(FreeIndexList32Test, CountAtCapacity)
 {
-	FreeIndexList list;
-	for (size_t i = 0; i < FreeIndexList::Capacity; ++i) {
+	FreeIndexList32 list;
+	for (size_t i = 0; i < FreeIndexList32::Capacity; ++i) {
 		list.alloc();
 	}
-	EXPECT_EQ(list.count(), FreeIndexList::Capacity);
+	EXPECT_EQ(list.count(), FreeIndexList32::Capacity);
 }
 
-TEST(FreeIndexListTest, FreeMiddleIndexAndRealloc)
+TEST(FreeIndexList32Test, FreeMiddleIndexAndRealloc)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	list.alloc(); // 0
 	list.alloc(); // 1
 	auto middle = list.alloc(); // 2
@@ -160,9 +160,9 @@ TEST(FreeIndexListTest, FreeMiddleIndexAndRealloc)
 	EXPECT_EQ(list.alloc(), middle);
 }
 
-TEST(FreeIndexListTest, FreeMultipleNonSequential)
+TEST(FreeIndexList32Test, FreeMultipleNonSequential)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	list.alloc(); // idx0
 	auto idx1 = list.alloc();
 	list.alloc(); // idx2
@@ -178,9 +178,9 @@ TEST(FreeIndexListTest, FreeMultipleNonSequential)
 	EXPECT_EQ(list.count(), 5u);
 }
 
-TEST(FreeIndexListTest, AllocFreeAllocPattern)
+TEST(FreeIndexList32Test, AllocFreeAllocPattern)
 {
-	FreeIndexList list;
+	FreeIndexList32 list;
 	
 	for (size_t i = 0; i < 10; ++i) {
 		auto idx = list.alloc();

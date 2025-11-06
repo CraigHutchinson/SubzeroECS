@@ -1,44 +1,44 @@
-#include "SubzeroECS/GlobalUniqueIndex.hpp"
+#include "SubzeroECS/UniqueIndex32.hpp"
 
 #include <gtest/gtest.h>
 
 namespace SubzeroECS {
 namespace Test {
 
-TEST(GlobalUniqueIndexTest, FirstIsZero)
+TEST(UniqueIndex32Test, FirstIsZero)
 {
-	GlobalUniqueIndex id;
+	UniqueIndex32 id;
 	EXPECT_EQ(static_cast<uint32_t>(id), 0u);
 }
 
-TEST(GlobalUniqueIndexTest, OnlyInstanceIsZero)
+TEST(UniqueIndex32Test, OnlyInstanceIsZero)
 {
 	{
-		GlobalUniqueIndex id1;
+		UniqueIndex32 id1;
 		EXPECT_EQ(static_cast<uint32_t>(id1), 0u);
 	}
 	{
-		GlobalUniqueIndex id2;
+		UniqueIndex32 id2;
 		EXPECT_EQ(static_cast<uint32_t>(id2), 0u);
 	}
 }
 
-TEST(GlobalUniqueIndexTest, SecondIsOne)
+TEST(UniqueIndex32Test, SecondIsOne)
 {
-	GlobalUniqueIndex id1;
-	GlobalUniqueIndex id2;
+	UniqueIndex32 id1;
+	UniqueIndex32 id2;
 	EXPECT_EQ(static_cast<uint32_t>(id2), 1u);
 }
 
-TEST(GlobalUniqueIndexTest, OnlySecondInstanceIsOne)
+TEST(UniqueIndex32Test, OnlySecondInstanceIsOne)
 {
-	GlobalUniqueIndex id1;
+	UniqueIndex32 id1;
 	{
-		GlobalUniqueIndex id2;
+		UniqueIndex32 id2;
 		EXPECT_EQ(static_cast<uint32_t>(id2), 1u);
 	}
 	{
-		GlobalUniqueIndex id2;
+		UniqueIndex32 id2;
 		EXPECT_EQ(static_cast<uint32_t>(id2), 1u);
 	}
 }

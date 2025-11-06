@@ -2,7 +2,7 @@
 
 #include <cassert>
 #include <stdexcept>
-#include "GlobalUniqueIndex.hpp"
+#include "UniqueIndex32.hpp"
 
 namespace SubzeroECS {
 
@@ -148,7 +148,7 @@ private:
 
 private:
 	CollectionInstancesBase* bufferListHead_;
-	const GlobalUniqueIndex registeryId_; //< Registry instance index
+	const UniqueIndex32 registeryId_; //< Registry instance index
 };
 
 

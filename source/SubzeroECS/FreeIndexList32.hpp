@@ -11,7 +11,7 @@ namespace SubzeroECS {
 /** Handles a list of free indices as a bit-mask
 @remark Uses a 32bit mask and will throw exception when the limit is reached
 */
-class FreeIndexList
+class FreeIndexList32
 {
 public:
 	using Index = std::uint_fast16_t; //< Freelist return value (Index type of at least 16 bits)
@@ -21,7 +21,7 @@ public:
 	
 public:
 
-	FreeIndexList();
+	FreeIndexList32();
 
 	/** Alocate a new entry from the free-store 
 	@notice If the free-store is empty then throws AllocFailed 
@@ -52,14 +52,14 @@ private:
 	std::bitset<Capacity> freeMask_; //< Bitset where 0 = free, 1 = allocated
 };
 
-inline FreeIndexList::FreeIndexList() 
+inline FreeIndexList32::FreeIndexList32() 
 	: freeMask_()
 {
 	// Initialize with all bits clear (all indices are free)
 	// Default constructor already zeros the bitset
 }
 
-inline FreeIndexList::Index FreeIndexList::alloc()
+inline FreeIndexList32::Index FreeIndexList32::alloc()
 { 
 	if (freeMask_.all())
 		throw AllocFailed("Exceeds limit of UniqueIndex instances");
@@ -75,25 +75,25 @@ inline FreeIndexList::Index FreeIndexList::alloc()
 	return index;
 }
 
-inline void FreeIndexList::free(Index index)
+inline void FreeIndexList32::free(Index index)
 {
 	// Mark this index as free (clear the bit)
 	freeMask_.reset(index); 
 }
 
-inline bool FreeIndexList::isEmpty() const
+inline bool FreeIndexList32::isEmpty() const
 { 
 	// Empty means no indices are allocated (no bits set)
 	return freeMask_.none(); 
 }
 
-inline bool FreeIndexList::isFull() const
+inline bool FreeIndexList32::isFull() const
 { 
 	// Full means all indices are allocated (all bits set)
 	return freeMask_.all(); 
 }
 
-inline size_t FreeIndexList::count() const
+inline size_t FreeIndexList32::count() const
 {
 	// Return the number of allocated indices (direct count)
 	return freeMask_.count();

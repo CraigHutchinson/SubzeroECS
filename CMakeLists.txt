@@ -34,8 +34,8 @@ target_sources(${PROJECT_NAME}
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/CollectionRegistry.hpp
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Entity.hpp
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/EntityId.hpp
-    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/FreeIndexList.hpp 
-    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/GlobalUniqueIndex.hpp 
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/FreeIndexList32.hpp 
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/UniqueIndex32.hpp 
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Has.hpp 
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Logical.hpp
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Query.hpp
@@ -46,7 +46,7 @@ target_sources(${PROJECT_NAME}
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/World.hpp
   PRIVATE 
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/CollectionRegistry.cpp
-    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/GlobalUniqueIndex.cpp
+    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/UniqueIndex32.cpp
     )
 
 set_target_properties(${PROJECT_NAME} 
