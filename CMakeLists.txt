@@ -46,7 +46,6 @@ target_sources(${PROJECT_NAME}
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/World.hpp
   PRIVATE 
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/CollectionRegistry.cpp
-    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/FreeIndexList.cpp
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/GlobalUniqueIndex.cpp
     )
 
