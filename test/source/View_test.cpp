@@ -101,6 +101,8 @@ namespace SubzeroECS {
 			{
 				(void)expected; //unused
 				EXPECT_TRUE( iEntity.has<Human>() );
+				// Note: Only valid for 'optional' testing as this is a compile-time error here
+				// EXPECT_FALSE( iEntity.has<Health>() );
 				++iEntity;
 			}
 		}
