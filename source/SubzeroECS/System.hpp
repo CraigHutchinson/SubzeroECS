@@ -36,7 +36,7 @@ namespace SubzeroECS
 		virtual void update() override
 		{
 			const auto iEnd = end();
-			for (�autoSubzeroECSntty = begin();SubzeroECSntty != iEnd; +SubzeroECSntty) 
+			for (auto iEntity = begin(); iEntity != iEnd; ++iEntity)
 			{ 
 				update( *iEntity );
 			} 

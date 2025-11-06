@@ -156,7 +156,11 @@ namespace SubzeroECS
 				}
 			}
 
-			// Helper for N-way intersection (N >= 3)
+			/** Helper for N-way intersection (N >= 3)
+			@todo Performance optimizations: 
+			- https://www.vldb.org/pvldb/vol8/p293-inoue.pdf
+			- https://ceur-ws.org/Vol-2840/short2.pdf
+			 */
 			template<std::size_t... Is>
 			Iterator& advanceN( std::index_sequence<Is...> )
 			{
