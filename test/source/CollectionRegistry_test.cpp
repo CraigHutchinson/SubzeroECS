@@ -4,6 +4,8 @@
 
 #include "TestTypes.hpp"
 #include <gtest/gtest.h>
+#include <memory>
+#include <vector>
 
 namespace SubzeroECS {
 namespace Test 
@@ -186,6 +188,27 @@ namespace Test
 		// Registry2 should have Shoes but not Human
 		ASSERT_NE(nullptr, registry2.find<Shoes>());
 		ASSERT_EQ(nullptr, registry2.find<Human>());
+	}
+
+	TEST(CollectionRegistry, ExceedCapacity_Throws)
+	{
+		// CollectionRegistry capacity is 32 (from UniqueIndex32)
+		constexpr size_t capacity = CollectionRegistry::Capacity;
+		ASSERT_EQ(capacity, 32u);
+		
+		// Create an array of registries up to capacity
+		std::vector<std::unique_ptr<CollectionRegistry>> registries;
+		registries.reserve(capacity);
+		
+		// Should be able to create exactly 'capacity' registries
+		for (size_t i = 0; i < capacity; ++i) {
+			ASSERT_NO_THROW(registries.push_back(std::make_unique<CollectionRegistry>()));
+		}
+		
+		ASSERT_EQ(registries.size(), capacity);
+		
+		// Attempting to create one more should throw
+		ASSERT_THROW(CollectionRegistry{}, std::overflow_error);
 	}
 
 
