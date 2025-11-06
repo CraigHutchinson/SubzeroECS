@@ -1,6 +1,9 @@
 #pragma once
 
+#include <algorithm> //< std::all_of, std::distance, std::lower_bound
+#include <array>
 #include <tuple>
+
 #include "Collection.hpp"
 
 template <typename T, typename... Ts> struct get_type_index;
@@ -40,20 +43,33 @@ namespace SubzeroECS
 		static constexpr uint_fast32_t Size
               = sizeof...(Components);  ///< number of components
 
-		typedef std::tuple< Collection<Components>&... > Collections; ///< All component collections
+		using Collections = std::tuple< Collection<Components>&... >; ///< All component collections
+		using Iterators = std::tuple< typename Collection<Components>::Iterator... >; ///< All component iterators
+		/// @temp Detect all Iterators of same type and use std::array automatically?
 
-#if 1
-		typedef std::tuple< typename Collection<Components>::Iterator... > CollectionIterators; ///< All omcponent iterators
-#else
-		/// @temp Detect all iterators of same type and use std::array automatically
-		typedef std::array< typename Collection<void>::Iterator, Size > CollectionIterators;
-#endif
+		using ViewIterationState = std::tuple<std::pair< Collection<Components>&, typename Collection<Components>::Iterator >...>;
 
+		/** Get the current iteration state */
+		template<std::size_t... Is>
+		static ViewIterationState makeIterationStateImpl( Collections& collections, Iterators& iterators, std::index_sequence<Is...> )
+		{
+			return std::make_tuple(
+				std::make_pair(
+					std::ref(std::get<Is>(collections)),
+					std::get<Is>(iterators))... );
+		}
+
+		static ViewIterationState makeIterationState( Collections& collections, Iterators& iterators )
+		{
+			return makeIterationStateImpl(collections, iterators, std::index_sequence_for<Components...>{});
+		}
+
+		/** Iterator for the view performing set-intersection over all component collections */
 		class Iterator
 		{
 		public:
-			Iterator( Collections& collections, CollectionIterators&& iterators )
-			   : collections_(collections)
+			Iterator( Collections& collections, Iterators&& iterators )
+			   : collections_( collections)
 				, iterators_( std::move(iterators) )
 			{
 				// Advance to first valid iterator position
@@ -64,7 +80,7 @@ namespace SubzeroECS
 			template< typename Component>
 			Component& get()
 			{
-				static const uint32_t iComponent = get_type_index<Component,Components...>::value; 
+				static const uint32_t iComponent = get_type_index<Component, Components...>::value;
 				return std::get<iComponent>(collections_).at( 
 					std::get<iComponent>(iterators_) );
 			}
@@ -76,7 +92,7 @@ namespace SubzeroECS
 			}
 
 			// Check if all iterators point to the same Entity or all point to end
-			bool isAtValid() const
+			bool isAtValid()
 			{
 				if constexpr (sizeof...(Components) == 0)
 				{
@@ -88,25 +104,98 @@ namespace SubzeroECS
 					// Single component - always valid or at end
 					return true;
 				}
-				else if constexpr (sizeof...(Components) == 2)
-				{
-					// Two components - check if both at end or both point to same entity
-					auto& it1 = std::get<0>(iterators_);
-					auto& it2 = std::get<1>(iterators_);
-					auto end1 = std::get<0>(collections_).end();
-					auto end2 = std::get<1>(collections_).end();
-					
-					return (it1 == end1 && it2 == end2) || 
-						   (it1 != end1 && it2 != end2 && *it1 == *it2);
-				}
 				else
-				{
-					// TODO: Implement for N components
-					static_assert(sizeof...(Components) <= 2, "Only 0-2 component views are currently implemented");
+				{					
+					auto state = makeIterationState( collections_, iterators_ );
+					return std::apply( [](auto&... pairings)
+					{
+						// get all EntityIds from the iterators
+						std::array<EntityId, sizeof...(Components)> iEntityIds = { 
+							(pairings.second == pairings.first.end() ? cInvalid_EntityId : *pairings.second)... };
+
+						// If all are equal to first or all are at end then valid
+						return std::all_of(iEntityIds.begin(), iEntityIds.end()
+							, [cmp=iEntityIds[0]](EntityId v) { return v == cmp; });
+					}, state );
 				}
 			}
 
 		public:
+			// Helper for N-way intersection (N >= 3)
+			template<std::size_t... Is>
+			Iterator& advanceToValidN( std::index_sequence<Is...> )
+			{
+				// Three-or-more-way intersection
+				auto its = std::make_tuple( std::ref(std::get<Is>(iterators_))... );
+				auto iends = std::make_tuple( std::get<Is>(collections_).end()... );
+
+
+				
+				auto notAnyAtEnd = [&its, &iends]() {
+					bool anyAtEnd = false;
+					((anyAtEnd = anyAtEnd || (std::get<Is>(its) == std::get<Is>(iends))), ...);
+					return !anyAtEnd;
+				};
+
+				auto setAllAtEnd = [&its, &iends]() {
+					((std::get<Is>(its) = std::get<Is>(iends)), ...);
+				};
+
+				auto idsAllMatch = [&its]() {
+					EntityId firstId = *std::get<0>(its);
+					bool allMatch = true;
+					((allMatch = allMatch && (*std::get<Is>(its) == firstId)), ...);
+					return allMatch;
+				};
+
+				// Update all iterators that are less than max and update max accordingly
+				auto incrementIfLessThanMaxId = [&its, &iends]( EntityId validId ) {
+					EntityId maxId = validId;
+					([&]() {
+						while (*std::get<Is>(its) < validId )
+						{
+							//End reached
+							if ( ++std::get<Is>(its) == std::get<Is>(iends))
+							{
+								maxId = cInvalid_EntityId;
+								return;
+							}
+
+							// New max
+							if (*std::get<Is>(its) > maxId)
+							{
+								maxId = *std::get<Is>(its);
+								break;
+							}
+						}
+					}(), ...);
+					return maxId;
+				};
+
+				// Incrementing at end is an error
+				assert (std::get<0>(its) != std::get<0>(iends));
+
+				// Advance past the current position
+				++std::get<0>(its);
+				EntityId maxId = std::get<0>(its) != std::get<0>(iends) ? *std::get<0>(its) : cInvalid_EntityId;
+
+				// Find next intersection point
+				while ( maxId != cInvalid_EntityId )
+				{
+					// Advance all iterators that are less than max
+					EntityId nextValidId = incrementIfLessThanMaxId(maxId);
+					if ( nextValidId == maxId ) //< All matched up to max
+						return *this; // Found intersection
+
+					maxId = nextValidId;
+				}
+				
+				// No more intersections, set all to end
+				setAllAtEnd();
+
+				return *this;
+			}
+
 			Iterator& advanceToValid()
 			{
 				// Set-intersection operation over all component collections			
@@ -150,10 +239,8 @@ namespace SubzeroECS
 				}
 				else
 				{
-					// TODO: Implement for N components
-					static_assert(sizeof...(Components) <= 2, "Only 0-2 component views are currently implemented");
+					advanceToValidN( std::make_index_sequence<sizeof...(Components)>{} );
 				}
-
 				return *this;
 			}		
 
@@ -181,8 +268,8 @@ namespace SubzeroECS
 			}
 
 		private:
-			Collections collections_; ////< Collections from the view
-			CollectionIterators iterators_;
+			Collections collections_;
+			Iterators iterators_;
 		};
 
 	public:
@@ -205,12 +292,12 @@ namespace SubzeroECS
 		/** TODO */
 		Iterator begin() 
 		{ 
-			return Iterator( collections_, CollectionIterators( getCollection<Components>().begin()...) );
+			return Iterator( collections_, Iterators( getCollection<Components>().begin()...) );
 		}
 		
 		/** TODO */
 		Iterator end() 
-		{ return Iterator( collections_, CollectionIterators( getCollection<Components>().end()... )  ); }
+		{ return Iterator( collections_, Iterators( getCollection<Components>().end()... )  ); }
 	private:
 		Collections collections_;
 	};

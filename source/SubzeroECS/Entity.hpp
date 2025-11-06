@@ -16,13 +16,21 @@ namespace SubzeroECS
 	{
 	public:
 		/* Default consturctor initialises a null ECS-entity reference */
-		Entity();
+		Entity() = default;
 
 		/* Create aentity for the specified world and Id */
-		Entity(World& world, EntityId id) ;
+		Entity(World& world, EntityId id)
+			: world_(&world)
+			, id_(id)
+		{}
 		
 		/** Get entitys world */
-		World& world() const;
+		World& world() const
+		{
+			if ( world_ == nullptr )
+				throw std::runtime_error( "Entity::world_ == nullptr" );
+			return *world_;
+		}
 
 		/** Get entity handle */
 		constexpr EntityId id() const {
@@ -68,8 +76,8 @@ namespace SubzeroECS
 		}
 
 	protected:
-		World* world_;
-		EntityId id_;
+		World* world_ = nullptr;
+		EntityId id_ = cInvalid_EntityId;
 	};
 
 	/** Equality to test entityId and world are equal

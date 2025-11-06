@@ -12,8 +12,8 @@ namespace Test
 	TEST(Entity,Null)
 	{
 		Entity nullA;
-		Entity nullB( *(World*)0, 0u );
-		Entity nullC( *(World*)3, 0u );
+		Entity nullB( *(World*)0, cInvalid_EntityId );
+		Entity nullC( *(World*)3, cInvalid_EntityId );
 
 		ASSERT_TRUE( nullA.isNull() );
 		ASSERT_TRUE( nullB.isNull() );

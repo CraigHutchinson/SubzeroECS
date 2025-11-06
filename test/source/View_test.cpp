@@ -88,7 +88,6 @@ namespace SubzeroECS {
 			EXPECT_EQ( view.end(), iEntity );
 		}
 
-#if 0 //NOT YET IMPLEMENTED: N-way intersection
 		TEST( View, Intersect3 )
 		{
 			World world;
@@ -105,9 +104,8 @@ namespace SubzeroECS {
 				EXPECT_EQ( entityId, *iEntity );
 				++iEntity;
 			}
-			EXPECT_EQ( view.end(), ++iEntity );
+			EXPECT_EQ( view.end(), iEntity );
 		}
-
 
 		TEST( View, Intersect4 )
 		{
@@ -126,9 +124,8 @@ namespace SubzeroECS {
 				EXPECT_EQ( entityId, *iEntity );
 				++iEntity;
 			}
-			EXPECT_EQ( view.end(), ++iEntity );
+			EXPECT_EQ( view.end(), iEntity );
 		}
-#endif
 
 	} //END: Test
 } //END: SubzeroECS
