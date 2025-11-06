@@ -29,7 +29,7 @@ namespace SubzeroECS
 		}
 
 		// Non-virtual update that calls derived class's processEntity
-		void update() override final
+		void update() override
 		{
 			const auto iEnd = this->ViewType::end();
 			for (auto iEntity = this->ViewType::begin(); iEntity != iEnd; ++iEntity)

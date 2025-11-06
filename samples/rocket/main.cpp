@@ -124,7 +124,7 @@ public:
 		}
 		
 		// Update buffer with all rockets
-		SubzeroECS::System<Position, Rocket>::update();
+		SubzeroECS::System<RenderSystem, Position, Rocket>::update();
 		
 		// Draw to screen
 		drawBuffer();
