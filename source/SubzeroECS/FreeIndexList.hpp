@@ -1,7 +1,9 @@
 #pragma once
 
+#include <bit>
+#include <bitset>
+#include <cstdint>
 #include <stdexcept>
-#include "Mask.hpp"
 
 namespace SubzeroECS {
 
@@ -12,8 +14,11 @@ namespace SubzeroECS {
 class FreeIndexList
 {
 public:
-	typedef Mask::Index Index; //< Freelist return value
-	typedef std::overflow_error AllocFailed;
+	using Index = std::uint_fast16_t; //< Freelist return value (Index type of at least 16 bits)
+	using AllocFailed = std::overflow_error;
+	
+	static constexpr size_t Capacity = 32; //< Number of available indices
+	
 public:
 
 	FreeIndexList();
@@ -30,17 +35,21 @@ public:
 	/** Check if there are no allocated entries
 	@return True if there are no allocated indices and false if any exist 
 	*/
-	bool isEmpty();
+	bool isEmpty() const;
 
 	/** Check if the free-list instance has been reached 
 	@notice The next call to alloc() will throw std::overflow_error(...) 
 	@return True if the internal limit is reached (i.e. 8/16/32) and true if less
 	than the limit and/or 0
 	*/
-	bool isFull();
+	bool isFull() const;
+
+	/** Get the number of currently allocated indices
+	*/
+	size_t count() const;
 
 private:
-	Mask mask_;
+	std::bitset<Capacity> freeMask_; //< Bitset where 0 = free, 1 = allocated
 };
 
 } //END: SubzeroECS

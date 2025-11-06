@@ -38,7 +38,6 @@ target_sources(${PROJECT_NAME}
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/GlobalUniqueIndex.hpp 
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Has.hpp 
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Logical.hpp
-    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Mask.hpp
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Query.hpp
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/SubzeroECS.hpp
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/System.hpp 
@@ -49,7 +48,6 @@ target_sources(${PROJECT_NAME}
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/CollectionRegistry.cpp
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/FreeIndexList.cpp
     ${PROJECT_SOURCE_DIR}/source/SubzeroECS/GlobalUniqueIndex.cpp
-    ${PROJECT_SOURCE_DIR}/source/SubzeroECS/Mask.cpp
     )
 
 set_target_properties(${PROJECT_NAME} 
