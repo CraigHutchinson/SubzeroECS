@@ -74,13 +74,120 @@ namespace Test
 		Collection<Human> instanceB( collectionRegistry ); // Second Collection
 		ASSERT_EQ( &instanceB, collectionRegistry.find<Human>() );
 	}
-/*
-	TEST(CollectionRegistry,StackCollectionsRegistration )
+
+	TEST(CollectionRegistry, MultipleRegistries_Independent)
 	{
-		CollectionRegistry collectionRegistry;
-		Collection<Human,Health,Hat> collections(collectionRegistry);
+		CollectionRegistry registry1;
+		CollectionRegistry registry2;
+		
+		Collection<Human> human1(registry1);
+		Collection<Human> human2(registry2);
+		
+		// Each registry should have its own collection instance
+		ASSERT_NE(&human1, &human2);
+		ASSERT_EQ(&registry1.get<Human>(), &human1);
+		ASSERT_EQ(&registry2.get<Human>(), &human2);
 	}
-	*/
+
+	TEST(CollectionRegistry, MultipleRegistries_SeparateTypes)
+	{
+		CollectionRegistry registry1;
+		CollectionRegistry registry2;
+		
+		Collection<Human> humanInRegistry1(registry1);
+		Collection<Health> healthInRegistry2(registry2);
+		
+		// Registry1 should only have Human
+		ASSERT_EQ(&registry1.get<Human>(), &humanInRegistry1);
+		ASSERT_EQ(nullptr, registry1.find<Health>());
+		
+		// Registry2 should only have Health
+		ASSERT_EQ(&registry2.get<Health>(), &healthInRegistry2);
+		ASSERT_EQ(nullptr, registry2.find<Human>());
+	}
+
+	TEST(CollectionRegistry, MultipleRegistries_SameTypeDifferentInstances)
+	{
+		CollectionRegistry registry1;
+		CollectionRegistry registry2;
+		CollectionRegistry registry3;
+		
+		Collection<Hat> hat1(registry1);
+		Collection<Hat> hat2(registry2);
+		Collection<Hat> hat3(registry3);
+		
+		// All three should be different instances
+		ASSERT_NE(&hat1, &hat2);
+		ASSERT_NE(&hat1, &hat3);
+		ASSERT_NE(&hat2, &hat3);
+		
+		// Each registry should reference its own collection
+		ASSERT_EQ(&registry1.get<Hat>(), &hat1);
+		ASSERT_EQ(&registry2.get<Hat>(), &hat2);
+		ASSERT_EQ(&registry3.get<Hat>(), &hat3);
+	}
+
+	TEST(CollectionRegistry, MultipleRegistries_MixedTypes)
+	{
+		CollectionRegistry registry1;
+		CollectionRegistry registry2;
+		
+		Collection<Human, Health> collections1(registry1);
+		Collection<Hat, Shoes> collections2(registry2);
+		
+		// Registry1 should have Human and Health
+		ASSERT_EQ(&registry1.get<Human>(), &collections1.get<Human>());
+		ASSERT_EQ(&registry1.get<Health>(), &collections1.get<Health>());
+		ASSERT_EQ(nullptr, registry1.find<Hat>());
+		ASSERT_EQ(nullptr, registry1.find<Shoes>());
+		
+		// Registry2 should have Hat and Shoes
+		ASSERT_EQ(&registry2.get<Hat>(), &collections2.get<Hat>());
+		ASSERT_EQ(&registry2.get<Shoes>(), &collections2.get<Shoes>());
+		ASSERT_EQ(nullptr, registry2.find<Human>());
+		ASSERT_EQ(nullptr, registry2.find<Health>());
+	}
+
+	TEST(CollectionRegistry, MultipleRegistries_ScopedUnregister)
+	{
+		CollectionRegistry registry1;
+		CollectionRegistry registry2;
+		
+		Collection<Human> human1(registry1);
+		
+		{
+			Collection<Human> human2(registry2);
+			ASSERT_NE(nullptr, registry2.find<Human>());
+		}
+		
+		// Registry2 should have unregistered Human
+		ASSERT_EQ(nullptr, registry2.find<Human>());
+		
+		// Registry1 should still have Human
+		ASSERT_EQ(&registry1.get<Human>(), &human1);
+	}
+
+	TEST(CollectionRegistry, MultipleRegistries_OverlappingTypes)
+	{
+		CollectionRegistry registry1;
+		CollectionRegistry registry2;
+		
+		Collection<Human, Health, Hat> collections1(registry1);
+		Collection<Health, Hat, Shoes> collections2(registry2);
+		
+		// Both should have Health and Hat, but different instances
+		ASSERT_NE(&registry1.get<Health>(), &registry2.get<Health>());
+		ASSERT_NE(&registry1.get<Hat>(), &registry2.get<Hat>());
+		
+		// Registry1 should have Human but not Shoes
+		ASSERT_NE(nullptr, registry1.find<Human>());
+		ASSERT_EQ(nullptr, registry1.find<Shoes>());
+		
+		// Registry2 should have Shoes but not Human
+		ASSERT_NE(nullptr, registry2.find<Shoes>());
+		ASSERT_EQ(nullptr, registry2.find<Human>());
+	}
+
 
 } //END: Test
 } //END: SubzeroECS

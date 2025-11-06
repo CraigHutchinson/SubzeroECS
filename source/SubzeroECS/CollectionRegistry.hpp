@@ -18,7 +18,7 @@ public:
 	/** Defines the limit for the number of RegistryCollections that can be instantiated
 	@remark A table of this size is created for every component that is registred in any CollectionRegistry instance
 	*/
-	static const size_t cMaximumRegistryInstances = 4; 
+	static constexpr size_t Capacity = UniqueIndex32::Capacity; 
 
 	CollectionRegistry();
 
@@ -53,7 +53,7 @@ public:
 	/** Set the collection for a component 
 	*/
 	template< typename Component>
-	void set( Collection<Component>* collection )
+	void registerCollection( Collection<Component>* collection )
 	{ 
 		CollectionInstances<Component>& collections = getCollection<Component>();
 		if ( collections.instances[registeryId_] != nullptr )
@@ -72,7 +72,7 @@ public:
 	/** Clear the collection for a component 
 	*/
 	template< typename Component>
-	void clear( Collection<Component>* collection )
+	void unregisterCollection( Collection<Component>* collection )
 	{ 
 		CollectionInstances<Component>& collections = getCollection<Component>();
 
@@ -98,6 +98,7 @@ public:
 
 		collections.instances[registeryId_] = nullptr;
 	}
+	
 private:
 
 	/** Each collection derives from an interface to allow clean up of references at destruction of RegistryCollection 
@@ -110,13 +111,13 @@ private:
 		: next(nullptr) 
 		{}
 
-		virtual void clear( const size_t index ) = 0;
+		virtual void unregisterCollection( const size_t index ) = 0;
 	};
 
 	template < typename Component >
 	struct CollectionInstances : CollectionInstancesBase
 	{
-		Collection<Component>* instances[cMaximumRegistryInstances];
+		Collection<Component>* instances[Capacity]{}; //< Collection instances for each RegistryCollection
 
 		/** Make unpopulated instances buffer 
 		*/
@@ -127,11 +128,8 @@ private:
 
 		/** Remove the instance of a registry
 		*/
-		virtual void clear( const size_t registryId )
+		void unregisterCollection( const size_t registryId ) override
 		{
-			if ( registryId > cMaximumRegistryInstances )
-				throw std::exception();
-			
 			instances[registryId] = nullptr;
 		}
 	};

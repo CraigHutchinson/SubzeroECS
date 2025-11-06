@@ -14,6 +14,8 @@ namespace SubzeroECS {
 	public:
 		using Index = FreeIndexList32::Index; //< Index/FreeList storage type of atleast 16bits
 	
+		static constexpr size_t Capacity = FreeIndexList32::Capacity; //< Number of available indices
+		
 	public:
 		/** Aquires the next available lowest-value index
 		@warning Indexes are reused by subsequent instantiations when they are freed

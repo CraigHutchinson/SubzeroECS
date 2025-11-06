@@ -25,12 +25,12 @@ namespace SubzeroECS {
 		Collection( CollectionRegistry& registry )
 			: registry_(registry)
 		{ 
-			registry_.set(this); 
+			registry_.registerCollection(this); 
 		}
 
 		~Collection()
 		{ 
-			registry_.clear(this);
+			registry_.unregisterCollection(this);
 		}
 
 		Component* create(EntityId entityId, Component&& component) noexcept(false)
