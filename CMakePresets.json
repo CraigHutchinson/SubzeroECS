@@ -189,6 +189,54 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "windows-x64-debug-benchmark",
+      "displayName": "Windows x64 Debug + Benchmarks",
+      "inherits": "windows-x64-debug",
+      "cacheVariables": {
+        "SUBZEROECS_BUILD_BENCHMARKS": true
+      }
+    },
+    {
+      "name": "windows-x64-release-benchmark",
+      "displayName": "Windows x64 Release + Benchmarks",
+      "inherits": "windows-x64-release",
+      "cacheVariables": {
+        "SUBZEROECS_BUILD_BENCHMARKS": true
+      }
+    },
+    {
+      "name": "linux-x64-debug-benchmark",
+      "displayName": "Linux x64 Debug + Benchmarks",
+      "inherits": "linux-x64-debug",
+      "cacheVariables": {
+        "SUBZEROECS_BUILD_BENCHMARKS": true
+      }
+    },
+    {
+      "name": "linux-x64-release-benchmark",
+      "displayName": "Linux x64 Release + Benchmarks",
+      "inherits": "linux-x64-release",
+      "cacheVariables": {
+        "SUBZEROECS_BUILD_BENCHMARKS": true
+      }
+    },
+    {
+      "name": "macos-debug-benchmark",
+      "displayName": "macOS Debug + Benchmarks",
+      "inherits": "macos-debug",
+      "cacheVariables": {
+        "SUBZEROECS_BUILD_BENCHMARKS": true
+      }
+    },
+    {
+      "name": "macos-release-benchmark",
+      "displayName": "macOS Release + Benchmarks",
+      "inherits": "macos-release",
+      "cacheVariables": {
+        "SUBZEROECS_BUILD_BENCHMARKS": true
+      }
     }
   ]
 }
