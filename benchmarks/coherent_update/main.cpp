@@ -22,10 +22,11 @@ private:
 };
 
 // ============================================================================
-// OOP Benchmarks
+// OOP Benchmarks - Traditional Object-Oriented Design
+// Each entity is an object with virtual methods (polymorphism)
 // ============================================================================
 
-static void BM_OOP_CreateEntities(benchmark::State& state) {
+static void BM_OOP_Coherent_CreateEntities(benchmark::State& state) {
     const int64_t entityCount = state.range(0);
     
     // Benchmark entity creation
@@ -46,7 +47,7 @@ static void BM_OOP_CreateEntities(benchmark::State& state) {
     state.SetLabel("OOP (Virtual Dispatch)");
 }
 
-static void BM_OOP_UpdatePositions(benchmark::State& state) {
+static void BM_OOP_Coherent_UpdatePositions(benchmark::State& state) {
     const int64_t entityCount = state.range(0);
     const float deltaTime = 1.0f / 60.0f; // 60 FPS
     
@@ -69,10 +70,11 @@ static void BM_OOP_UpdatePositions(benchmark::State& state) {
 }
 
 // ============================================================================
-// DOD Benchmarks
+// DOD Benchmarks - Data-Oriented Design
+// Components stored in contiguous arrays (Structure of Arrays)
 // ============================================================================
 
-static void BM_DOD_CreateEntities(benchmark::State& state) {
+static void BM_DOD_Coherent_CreateEntities(benchmark::State& state) {
     const int64_t entityCount = state.range(0);
     
     // Benchmark entity creation
@@ -94,7 +96,7 @@ static void BM_DOD_CreateEntities(benchmark::State& state) {
     state.SetLabel("DOD (Structure of Arrays)");
 }
 
-static void BM_DOD_UpdatePositions(benchmark::State& state) {
+static void BM_DOD_Coherent_UpdatePositions(benchmark::State& state) {
     const int64_t entityCount = state.range(0);
     const float deltaTime = 1.0f / 60.0f; // 60 FPS
     
@@ -118,10 +120,11 @@ static void BM_DOD_UpdatePositions(benchmark::State& state) {
 }
 
 // ============================================================================
-// ECS Benchmarks
+// ECS Benchmarks - Entity Component System
+// SubzeroECS framework with Systems processing Components
 // ============================================================================
 
-static void BM_ECS_CreateEntities(benchmark::State& state) {
+static void BM_ECS_Coherent_CreateEntities(benchmark::State& state) {
     const int64_t entityCount = state.range(0);
     
     // Benchmark entity creation
@@ -142,7 +145,7 @@ static void BM_ECS_CreateEntities(benchmark::State& state) {
     state.SetLabel("SubzeroECS");
 }
 
-static void BM_ECS_UpdatePositions(benchmark::State& state) {
+static void BM_ECS_Coherent_UpdatePositions(benchmark::State& state) {
     const int64_t entityCount = state.range(0);
     const float deltaTime = 1.0f / 60.0f; // 60 FPS
     
@@ -170,45 +173,46 @@ static void BM_ECS_UpdatePositions(benchmark::State& state) {
 
 // Register benchmarks in interleaved order so all implementations run at the same
 // size before moving to the next size (ECS, OOP, DOD for each size)
+// Each implementation uses its ideal pattern for data/function coherence
 
 // Size: 10 entities - Entity Creation
-BENCHMARK(BM_ECS_CreateEntities)->Arg(10)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_OOP_CreateEntities)->Arg(10)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_DOD_CreateEntities)->Arg(10)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_ECS_Coherent_CreateEntities)->Arg(10)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_OOP_Coherent_CreateEntities)->Arg(10)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_DOD_Coherent_CreateEntities)->Arg(10)->Unit(benchmark::kMicrosecond);
 
 // Size: 10 entities - Update
-BENCHMARK(BM_ECS_UpdatePositions)->Arg(10)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_OOP_UpdatePositions)->Arg(10)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_DOD_UpdatePositions)->Arg(10)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_ECS_Coherent_UpdatePositions)->Arg(10)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_OOP_Coherent_UpdatePositions)->Arg(10)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_DOD_Coherent_UpdatePositions)->Arg(10)->Unit(benchmark::kMicrosecond);
 
 // Size: 1K entities - Entity Creation
-BENCHMARK(BM_ECS_CreateEntities)->Arg(1000)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_OOP_CreateEntities)->Arg(1000)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_DOD_CreateEntities)->Arg(1000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_ECS_Coherent_CreateEntities)->Arg(1000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_OOP_Coherent_CreateEntities)->Arg(1000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_DOD_Coherent_CreateEntities)->Arg(1000)->Unit(benchmark::kMicrosecond);
 
 // Size: 1K entities - Update
-BENCHMARK(BM_ECS_UpdatePositions)->Arg(1000)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_OOP_UpdatePositions)->Arg(1000)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_DOD_UpdatePositions)->Arg(1000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_ECS_Coherent_UpdatePositions)->Arg(1000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_OOP_Coherent_UpdatePositions)->Arg(1000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_DOD_Coherent_UpdatePositions)->Arg(1000)->Unit(benchmark::kMicrosecond);
 
 // Size: 100K entities - Entity Creation
-BENCHMARK(BM_ECS_CreateEntities)->Arg(100000)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_OOP_CreateEntities)->Arg(100000)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_DOD_CreateEntities)->Arg(100000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_ECS_Coherent_CreateEntities)->Arg(100000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_OOP_Coherent_CreateEntities)->Arg(100000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_DOD_Coherent_CreateEntities)->Arg(100000)->Unit(benchmark::kMicrosecond);
 
 // Size: 100K entities - Update
-BENCHMARK(BM_ECS_UpdatePositions)->Arg(100000)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_OOP_UpdatePositions)->Arg(100000)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_DOD_UpdatePositions)->Arg(100000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_ECS_Coherent_UpdatePositions)->Arg(100000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_OOP_Coherent_UpdatePositions)->Arg(100000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_DOD_Coherent_UpdatePositions)->Arg(100000)->Unit(benchmark::kMicrosecond);
 
 // Size: 10M entities - Entity Creation
-BENCHMARK(BM_ECS_CreateEntities)->Arg(10000000)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_OOP_CreateEntities)->Arg(10000000)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_DOD_CreateEntities)->Arg(10000000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_ECS_Coherent_CreateEntities)->Arg(10000000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_OOP_Coherent_CreateEntities)->Arg(10000000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_DOD_Coherent_CreateEntities)->Arg(10000000)->Unit(benchmark::kMicrosecond);
 
 // Size: 10M entities - Update
-BENCHMARK(BM_ECS_UpdatePositions)->Arg(10000000)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_OOP_UpdatePositions)->Arg(10000000)->Unit(benchmark::kMicrosecond);
-BENCHMARK(BM_DOD_UpdatePositions)->Arg(10000000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_ECS_Coherent_UpdatePositions)->Arg(10000000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_OOP_Coherent_UpdatePositions)->Arg(10000000)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_DOD_Coherent_UpdatePositions)->Arg(10000000)->Unit(benchmark::kMicrosecond);
 
 // Main function is provided by benchmark::benchmark_main

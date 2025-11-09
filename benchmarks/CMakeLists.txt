@@ -6,4 +6,5 @@ project(SubzeroECSBenchmarks CXX)
 find_package(Benchmark REQUIRED)
 
 # Add benchmark subdirectories
-add_subdirectory(position_update)
+add_subdirectory(coherent_update)
+add_subdirectory(fragmented_update)
