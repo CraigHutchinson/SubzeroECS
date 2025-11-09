@@ -200,7 +200,7 @@ Perhaps the [MiniCppStarter](https://github.com/TheLartians/MiniCppStarter) is s
 SubzeroECS is dual-licensed:
 
 - Open Source: AGPL-3.0-only (see [LICENSE](LICENSE))
-- Commercial: Proprietary license for closed-source embedding, private modifications, or SaaS operation without AGPL disclosure. Request access by opening a GitHub issue titled “Commercial License Request: <Your Organization>” (see [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)).
+- Commercial: Proprietary license for closed-source embedding, private modifications, or SaaS operation without AGPL disclosure. Request access by opening a GitHub issue titled “Commercial License Request: <Your Organization Name>” (see [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)).
 
 Historical Versions:
 Releases prior to v1.0 were published under the Unlicense (public domain).
