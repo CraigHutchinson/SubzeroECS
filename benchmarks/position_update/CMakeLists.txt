@@ -26,8 +26,21 @@ if(MSVC)
     target_compile_options(position_update_benchmark PRIVATE
         /W4                                  # Warning level 4
         $<$<CONFIG:Debug>:/Od>              # Debug: Disable optimization (use Release preset instead!)
-        $<$<CONFIG:Release>:/O2>            # Release: Full optimization
-        $<$<CONFIG:RelWithDebInfo>:/O2>     # RelWithDebInfo: Full optimization
+        $<$<CONFIG:Release>:/O2             # Release: Full optimization
+            #/Oi                              # Enable intrinsic functions
+            #/Ot                              # Favor fast code
+            #/GL                             # Whole program optimization
+            >
+        $<$<CONFIG:RelWithDebInfo>:/O2      # RelWithDebInfo: Full optimization
+           # /Oi
+           # /Ot
+           # /GL
+           >
+    )
+    # Enable link-time optimizations in Release
+    target_link_options(position_update_benchmark PRIVATE
+        $<$<CONFIG:Release>:/LTCG>          # Link-time code generation
+        $<$<CONFIG:RelWithDebInfo>:/LTCG>
     )
     # Disable runtime checks for benchmarks
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -38,7 +51,21 @@ else()
     # GCC/Clang
     target_compile_options(position_update_benchmark PRIVATE
         $<$<CONFIG:Debug>:-O0>              # Debug: No optimization (use Release preset instead!)
-        $<$<CONFIG:Release>:-O3>            # Release: Maximum optimization
+        $<$<CONFIG:Release>:-O3             # Release: Maximum optimization
+            -march=native                    # Optimize for this CPU
+            -mtune=native                    # Tune for this CPU
+            -ffast-math                      # Fast math optimizations
+            -flto>                           # Link-time optimization
         -Wall -Wextra                        # Enable warnings
     )
+    # Enable link-time optimizations in Release
+    target_link_options(position_update_benchmark PRIVATE
+        $<$<CONFIG:Release>:-flto>          # Link-time optimization
+    )
 endif()
+
+# Ensure NDEBUG is defined in Release builds (disables asserts)
+target_compile_definitions(position_update_benchmark PRIVATE
+    $<$<CONFIG:Release>:NDEBUG>
+    $<$<CONFIG:RelWithDebInfo>:NDEBUG>
+)

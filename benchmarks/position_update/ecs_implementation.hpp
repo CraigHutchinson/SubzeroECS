@@ -66,14 +66,10 @@ public:
     }
 
     size_t count() const {
-        // Count entities by iterating through the Position collection
-        size_t entityCount = 0;
-        SubzeroECS::Collection<Position>& posCollection = 
+        // Get the count directly from the Position collection
+        const SubzeroECS::Collection<Position>& posCollection = 
             const_cast<SubzeroECS::World&>(world_).CollectionRegistry::get<Position>();
-        for (auto it = posCollection.begin(); it != posCollection.end(); ++it) {
-            ++entityCount;
-        }
-        return entityCount;
+        return posCollection.size();
     }
 
     void clear() {
