@@ -1,0 +1,20 @@
+SubzeroECS Notice
+=================
+
+Copyright (c) 2025 Craig Hutchinson
+
+Dual Licensed:
+- Open Source: AGPL-3.0-only
+- Commercial: Proprietary license available via issue request (see COMMERCIAL-LICENSE.md).
+
+How to Request Commercial Terms:
+Open an issue titled “Commercial License Request: <Your Organization Name>” using the provided template.
+
+Previous Versions:
+Versions < v1.0 were under the Unlicense.
+
+Trademarks:
+“SubzeroECS” name and any project logos are reserved; do not imply endorsement without permission.
+
+Third-Party Components:
+(List dependencies and licenses here.)

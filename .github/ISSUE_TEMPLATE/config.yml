@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Project Homepage
+    url: https://github.com/CraigHutchinson/SubzeroECS
+    about: Repository root
