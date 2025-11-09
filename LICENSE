@@ -1,24 +1,46 @@
-This is free and unencumbered software released into the public domain.
+Dual Licensing Notice
+=====================
+SubzeroECS is dual-licensed:
 
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a compiled
-binary, for any purpose, commercial or non-commercial, and by any
-means.
+1. Open Source License: GNU Affero General Public License Version 3 (AGPL-3.0-only).
+2. Commercial License: Available for organizations that wish to keep modifications private, embed SubzeroECS in proprietary products, or run hosted/SaaS offerings without the AGPL network copyleft obligations.
 
-In jurisdictions that recognize copyright laws, the author or authors
-of this software dedicate any and all copyright interest in the
-software to the public domain. We make this dedication for the benefit
-of the public at large and to the detriment of our heirs and
-successors. We intend this dedication to be an overt act of
-relinquishment in perpetuity of all present and future rights to this
-software under copyright law.
+Commercial License Requests:
+Open a GitHub issue in this repository titled:
+Commercial License Request: <Your Organization Name>
+Provide: organization name, intended use (embedding / SaaS / internal), estimated user base, timeline, and any required legal clauses (e.g., indemnity, SLA). Use the “Commercial License Request” issue template if available.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
+Historical Licensing:
+Versions prior to v1.0 (or the first release after this change) were released under the Unlicense (public domain). Those versions remain available under their original terms. This AGPL license applies to all new versions from v1.0 onward unless explicitly stated otherwise.
 
-For more information, please refer to <https://unlicense.org>
+-----------------------------------------------------------------------
+                    GNU AFFERO GENERAL PUBLIC LICENSE
+                       Version 3, 19 November 2007
+
+Copyright (C) 2025 Craig Hutchinson
+
+Everyone is permitted to copy and distribute verbatim copies
+of this license document, but changing it is not allowed.
+
+                            Preamble
+
+The GNU Affero General Public License is a free, copyleft license for
+software and other kinds of works, specifically designed to ensure
+cooperation with the community in the case of network server software.
+
+[BEGIN FULL TEXT]
+
+(Replace this placeholder block with the COMPLETE, unabridged AGPL-3.0 text from: https://www.gnu.org/licenses/agpl-3.0.txt )
+
+[END FULL TEXT]
+
+Additional Permissions / Clarifications:
+No additional permissions are granted beyond the standard AGPL-3.0 terms for the open source variant.
+
+Commercial Use:
+Any commercial use that does not comply with AGPL-3.0 requires a separate written commercial license agreement obtainable via an issue request.
+
+Disclaimer:
+THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. SEE THE FULL LICENSE TEXT FOR DETAILS.
+
+-----------------------------------------------------------------------

@@ -194,3 +194,22 @@ Perhaps the [MiniCppStarter](https://github.com/TheLartians/MiniCppStarter) is s
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=TheLartians/ModernCppStarter,cpp-best-practices/gui_starter_template,filipdutescu/modern-cpp-template&type=Date)](https://star-history.com/#TheLartians/ModernCppStarter&cpp-best-practices/gui_starter_template&filipdutescu/modern-cpp-template&Date)
+
+## Licensing
+
+SubzeroECS is dual-licensed:
+
+- Open Source: AGPL-3.0-only (see [LICENSE](LICENSE))
+- Commercial: Proprietary license for closed-source embedding, private modifications, or SaaS operation without AGPL disclosure. Request access by opening a GitHub issue titled “Commercial License Request: <Your Organization>” (see [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)).
+
+Historical Versions:
+Releases prior to v1.0 were published under the Unlicense (public domain).
+
+Why AGPL?
+Ensures improvements used in network-accessible deployments remain available to the community.
+
+How to Request Commercial Terms:
+Open an issue using the “Commercial License Request” template and provide intended use, scale, and timeline.
+
+Contributions:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for dual-license inbound contribution terms.
