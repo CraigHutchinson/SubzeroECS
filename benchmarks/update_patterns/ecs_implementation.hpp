@@ -154,8 +154,9 @@ public:
 
     void processEntity(Iterator iEntity) {
         Scale& scale = iEntity.get<Scale>();
+        Color& color = iEntity.get<Color>();
 
-        Physics::pulseScale(scale.value, deltaTime);
+        Physics::pulseScale(scale.value, color.r, color.g, color.b, deltaTime);
     }
 };
 

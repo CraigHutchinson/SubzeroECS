@@ -48,11 +48,15 @@ inline void updateRotationHealth(float& rotation, float& health, float deltaTime
     health -= 0.01f * deltaTime;
 }
 
-inline void pulseScale(float& scale, float deltaTime) {
+inline void pulseScale(float& scale, float& color_r, float& color_g, float& color_b, float deltaTime) {
     // Pulse the scale - simulate some additional work
-    // that uses data that could exist on medium entities too
     scale *= (1.0f + 0.001f * deltaTime);
     if (scale > 2.0f) scale = 1.0f;  // Reset if too large
+    
+    // Pulse color channels based on scale
+    color_r = 0.5f + 0.5f * (scale - 1.0f);
+    color_g = 0.5f + 0.5f * (2.0f - scale);
+    color_b = 0.5f + 0.5f * ((scale - 1.0f) * (2.0f - scale));
 }
 
 } // namespace Physics

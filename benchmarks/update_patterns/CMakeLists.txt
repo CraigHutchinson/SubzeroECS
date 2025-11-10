@@ -28,14 +28,14 @@ if(MSVC)
         /W4                                  # Warning level 4
         $<$<CONFIG:Debug>:/Od>              # Debug: Disable optimization (use Release preset instead!)
         $<$<CONFIG:Release>:/O2             # Release: Full optimization
-            #/Oi                              # Enable intrinsic functions
-            #/Ot                              # Favor fast code
-            #/GL                             # Whole program optimization
+            /Oi                              # Enable intrinsic functions
+            /Ot                              # Favor fast code
+            /GL                             # Whole program optimization
             >
         $<$<CONFIG:RelWithDebInfo>:/O2      # RelWithDebInfo: Full optimization
-           # /Oi
-           # /Ot
-           # /GL
+            /Oi
+            /Ot
+            /GL
            >
     )
     # Enable link-time optimizations in Release

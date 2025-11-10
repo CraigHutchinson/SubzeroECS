@@ -117,6 +117,8 @@ struct MediumEntities {
     void updateAll(float deltaTime) {
         for (size_t i = 0; i < x.size(); ++i) {
             Physics::updatePosition(x[i], y[i], vx[i], vy[i], deltaTime);
+        }
+        for (size_t i = 0; i < x.size(); ++i) {
             Physics::updateRotationHealth(rotation[i], health[i], deltaTime);
         }
     }
@@ -170,8 +172,12 @@ struct LargeEntities {
     void updateAll(float deltaTime) {
         for (size_t i = 0; i < x.size(); ++i) {
             Physics::updatePosition(x[i], y[i], vx[i], vy[i], deltaTime);
+        }
+        for (size_t i = 0; i < x.size(); ++i) {
             Physics::updateRotationHealth(rotation[i], health[i], deltaTime);
-            Physics::pulseScale(scale[i], deltaTime);
+        }
+        for (size_t i = 0; i < x.size(); ++i) {
+            Physics::pulseScale(scale[i], color_r[i], color_g[i], color_b[i], deltaTime);
         }
     }
 };

@@ -127,7 +127,7 @@ public:
     void update(float deltaTime) override {
         Physics::updatePosition(x_, y_, vx_, vy_, deltaTime);
         Physics::updateRotationHealth(rotation_, health_, deltaTime);
-        Physics::pulseScale(scale_, deltaTime);
+        Physics::pulseScale(scale_, color_[0], color_[1], color_[2], deltaTime);
     }
 
     float getX() const override { return x_; }
@@ -141,7 +141,6 @@ private:
     float color_[4];
     int team_;
     int flags_;
-    char padding_[64]; // Extra padding to fragment memory
 };
 
 // Entity manager using unique_ptr - pointer indirection, heap fragmentation
