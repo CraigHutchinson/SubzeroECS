@@ -96,8 +96,7 @@
       "installDir": "${sourceDir}/out/install/${presetName}",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
-        "CMAKE_CXX_COMPILER": "cl.exe",
-        "CMAKE_DOTNET_TARGET_FRAMEWORK_VERSION": "v4.8"
+        "CMAKE_CXX_COMPILER": "cl.exe"
       },
       "condition": {
         "type": "equals",
@@ -189,6 +188,48 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "windows-x64-release-benchmark",
+      "displayName": "Windows x64 Release + Benchmarks",
+      "inherits": "windows-x64-release",
+      "cacheVariables": {
+        "SUBZEROECS_BUILD_BENCHMARKS": true
+      }
+    },
+    {
+      "name": "linux-x64-release-benchmark",
+      "displayName": "Linux x64 Release + Benchmarks",
+      "inherits": "linux-x64-release",
+      "cacheVariables": {
+        "SUBZEROECS_BUILD_BENCHMARKS": true
+      }
+    },
+    {
+      "name": "macos-release-benchmark",
+      "displayName": "macOS Release + Benchmarks",
+      "inherits": "macos-release",
+      "cacheVariables": {
+        "SUBZEROECS_BUILD_BENCHMARKS": true
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-x64-release-benchmark",
+      "displayName": "Windows x64 Release Benchmarks",
+      "configurePreset": "windows-x64-release-benchmark",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux-x64-release-benchmark",
+      "displayName": "Linux x64 Release Benchmarks",
+      "configurePreset": "linux-x64-release-benchmark"
+    },
+    {
+      "name": "macos-release-benchmark",
+      "displayName": "macOS Release Benchmarks",
+      "configurePreset": "macos-release-benchmark"
     }
   ]
 }

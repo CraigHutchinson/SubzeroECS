@@ -76,7 +76,10 @@ public:
 	{ 
 		CollectionInstances<Component>& collections = getCollection<Component>();
 
-		assert( collections.instances[registeryId_] == collection ); //, Sanity check - to remove
+		// Verify the collection pointer matches our registry entry
+		assert( collections.instances[registeryId_] == collection ); 
+		// Suppress unused parameter warning in release builds where assert is disabled
+		(void)collection;
 
 		if ( bufferListHead_ == &collections )
 		{

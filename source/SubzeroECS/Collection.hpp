@@ -88,6 +88,11 @@ namespace SubzeroECS {
 		Iterator end() 
 		{ return ids_.end(); }
 
+		/** Get the number of entities that have this component
+		*/
+		size_t size() const noexcept(true)
+		{ return ids_.size(); }
+
 	private:
 		CollectionRegistry& registry_; //< Registry the collection is attached to
 		
