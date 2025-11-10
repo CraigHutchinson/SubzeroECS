@@ -9,7 +9,7 @@
 // ============================================================================
 
 template<typename WorldType>
-static void BM_CreateEntities(benchmark::State& state, DistributionPattern pattern, const char* label) {
+static void BM_CreateEntities(benchmark::State& state, DistributionPattern pattern) {
     const int64_t entityCount = state.range(0);
     
     for (auto _ : state) {
@@ -26,11 +26,10 @@ static void BM_CreateEntities(benchmark::State& state, DistributionPattern patte
         benchmark::DoNotOptimize(world);
     }
     state.SetItemsProcessed(state.iterations() * entityCount);
-    state.SetLabel(label);
 }
 
 template<typename WorldType>
-static void BM_UpdateEntities(benchmark::State& state, DistributionPattern pattern, const char* label) {
+static void BM_UpdateEntities(benchmark::State& state, DistributionPattern pattern) {
     const int64_t entityCount = state.range(0);
     const float deltaTime = 1.0f / 60.0f;
     
@@ -47,7 +46,6 @@ static void BM_UpdateEntities(benchmark::State& state, DistributionPattern patte
         benchmark::DoNotOptimize(world);
     }
     state.SetItemsProcessed(state.iterations() * entityCount);
-    state.SetLabel(label);
 }
 
 // ============================================================================
@@ -56,21 +54,21 @@ static void BM_UpdateEntities(benchmark::State& state, DistributionPattern patte
 
 #define REGISTER_SIZE_BENCHMARKS(Size) \
     /* Size: Creation - Coherent */ \
-    BENCHMARK_CAPTURE(BM_CreateEntities<ECS_Pattern::EntityWorld>, ECS_Coherent, DistributionPattern::Coherent, "ECS-Coherent")->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK_CAPTURE(BM_CreateEntities<OOP_Pattern::EntityManager>, OOP_Coherent, DistributionPattern::Coherent, "OOP-Coherent")->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK_CAPTURE(BM_CreateEntities<DOD_Pattern::EntityData>, DOD_Coherent, DistributionPattern::Coherent, "DOD-Coherent")->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_CreateEntities<ECS_Pattern::EntityWorld>, ECS_Coherent, DistributionPattern::Coherent)->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_CreateEntities<OOP_Pattern::EntityManager>, OOP_Coherent, DistributionPattern::Coherent)->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_CreateEntities<DOD_Pattern::EntityData>, DOD_Coherent, DistributionPattern::Coherent)->Arg(Size)->Unit(benchmark::kMicrosecond); \
     /* Size: Creation - Fragmented */ \
-    BENCHMARK_CAPTURE(BM_CreateEntities<ECS_Pattern::EntityWorld>, ECS_Fragmented, DistributionPattern::Fragmented, "ECS-Fragmented")->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK_CAPTURE(BM_CreateEntities<OOP_Pattern::EntityManager>, OOP_Fragmented, DistributionPattern::Fragmented, "OOP-Fragmented")->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK_CAPTURE(BM_CreateEntities<DOD_Pattern::EntityData>, DOD_Fragmented, DistributionPattern::Fragmented, "DOD-Fragmented")->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_CreateEntities<ECS_Pattern::EntityWorld>, ECS_Fragmented, DistributionPattern::Fragmented)->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_CreateEntities<OOP_Pattern::EntityManager>, OOP_Fragmented, DistributionPattern::Fragmented)->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_CreateEntities<DOD_Pattern::EntityData>, DOD_Fragmented, DistributionPattern::Fragmented)->Arg(Size)->Unit(benchmark::kMicrosecond); \
     /* Size: Update - Coherent */ \
-    BENCHMARK_CAPTURE(BM_UpdateEntities<ECS_Pattern::EntityWorld>, ECS_Coherent, DistributionPattern::Coherent, "ECS-Coherent")->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK_CAPTURE(BM_UpdateEntities<OOP_Pattern::EntityManager>, OOP_Coherent, DistributionPattern::Coherent, "OOP-Coherent")->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK_CAPTURE(BM_UpdateEntities<DOD_Pattern::EntityData>, DOD_Coherent, DistributionPattern::Coherent, "DOD-Coherent")->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_UpdateEntities<ECS_Pattern::EntityWorld>, ECS_Coherent, DistributionPattern::Coherent)->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_UpdateEntities<OOP_Pattern::EntityManager>, OOP_Coherent, DistributionPattern::Coherent)->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_UpdateEntities<DOD_Pattern::EntityData>, DOD_Coherent, DistributionPattern::Coherent)->Arg(Size)->Unit(benchmark::kMicrosecond); \
     /* Size: Update - Fragmented */ \
-    BENCHMARK_CAPTURE(BM_UpdateEntities<ECS_Pattern::EntityWorld>, ECS_Fragmented, DistributionPattern::Fragmented, "ECS-Fragmented")->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK_CAPTURE(BM_UpdateEntities<OOP_Pattern::EntityManager>, OOP_Fragmented, DistributionPattern::Fragmented, "OOP-Fragmented")->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK_CAPTURE(BM_UpdateEntities<DOD_Pattern::EntityData>, DOD_Fragmented, DistributionPattern::Fragmented, "DOD-Fragmented")->Arg(Size)->Unit(benchmark::kMicrosecond);
+    BENCHMARK_CAPTURE(BM_UpdateEntities<ECS_Pattern::EntityWorld>, ECS_Fragmented, DistributionPattern::Fragmented)->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_UpdateEntities<OOP_Pattern::EntityManager>, OOP_Fragmented, DistributionPattern::Fragmented)->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_UpdateEntities<DOD_Pattern::EntityData>, DOD_Fragmented, DistributionPattern::Fragmented)->Arg(Size)->Unit(benchmark::kMicrosecond);
 
 // Register benchmarks for each size
 REGISTER_SIZE_BENCHMARKS(10)
