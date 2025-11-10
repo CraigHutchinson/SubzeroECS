@@ -5,257 +5,72 @@
 #include "ecs_implementation.hpp"
 
 // ============================================================================
-// Benchmark Template Functions
+// Generic Benchmarks using templates
 // ============================================================================
 
-// Helper macro to reduce code duplication
-#define BENCHMARK_CREATE_ENTITIES(Pattern, Namespace, Label) \
-static void BM_##Pattern##_CreateEntities(benchmark::State& state) { \
-    const int64_t entityCount = state.range(0); \
-    for (auto _ : state) { \
-        state.PauseTiming(); \
-        Namespace::EntityManager manager; \
-        RandomGenerator rng; \
-        state.ResumeTiming(); \
-        for (int64_t i = 0; i < entityCount; ++i) { \
-            manager.addEntity(rng.next(), rng.next(), rng.next(), rng.next()); \
-        } \
-        benchmark::DoNotOptimize(manager); \
-    } \
-    state.SetItemsProcessed(state.iterations() * entityCount); \
-    state.SetLabel(Label); \
-}
-
-#define BENCHMARK_UPDATE_ENTITIES(Pattern, Namespace, Label) \
-static void BM_##Pattern##_UpdatePositions(benchmark::State& state) { \
-    const int64_t entityCount = state.range(0); \
-    const float deltaTime = 1.0f / 60.0f; \
-    Namespace::EntityManager manager; \
-    RandomGenerator rng; \
-    for (int64_t i = 0; i < entityCount; ++i) { \
-        manager.addEntity(rng.next(), rng.next(), rng.next(), rng.next()); \
-    } \
-    for (auto _ : state) { \
-        manager.updateAll(deltaTime); \
-        benchmark::DoNotOptimize(manager); \
-    } \
-    state.SetItemsProcessed(state.iterations() * entityCount); \
-    state.SetLabel(Label); \
-}
-
-// ============================================================================
-// OOP Coherent Benchmarks
-// ============================================================================
-
-BENCHMARK_CREATE_ENTITIES(OOP_Coherent, OOP_Coherent, "OOP-Coherent")
-BENCHMARK_UPDATE_ENTITIES(OOP_Coherent, OOP_Coherent, "OOP-Coherent")
-
-// ============================================================================
-// OOP Fragmented Benchmarks
-// ============================================================================
-
-static void BM_OOP_Fragmented_CreateEntities(benchmark::State& state) {
+template<typename WorldType>
+static void BM_CreateEntities(benchmark::State& state, DistributionPattern pattern, const char* label) {
     const int64_t entityCount = state.range(0);
+    
     for (auto _ : state) {
         state.PauseTiming();
-        OOP_Fragmented::EntityManager manager;
-        RandomGenerator rng;
-        state.ResumeTiming();
-        for (int64_t i = 0; i < entityCount; ++i) {
-            manager.addEntity(rng.next(), rng.next(), rng.next(), rng.next(), static_cast<int>(i));
+        WorldType world;
+        if constexpr (requires { world.reserve(entityCount); }) {
+            world.reserve(entityCount);
         }
-        benchmark::DoNotOptimize(manager);
-    }
-    state.SetItemsProcessed(state.iterations() * entityCount);
-    state.SetLabel("OOP-Fragmented");
-}
-
-static void BM_OOP_Fragmented_UpdatePositions(benchmark::State& state) {
-    const int64_t entityCount = state.range(0);
-    const float deltaTime = 1.0f / 60.0f;
-    OOP_Fragmented::EntityManager manager;
-    RandomGenerator rng;
-    for (int64_t i = 0; i < entityCount; ++i) {
-        manager.addEntity(rng.next(), rng.next(), rng.next(), rng.next(), static_cast<int>(i));
-    }
-    for (auto _ : state) {
-        manager.updateAll(deltaTime);
-        benchmark::DoNotOptimize(manager);
-    }
-    state.SetItemsProcessed(state.iterations() * entityCount);
-    state.SetLabel("OOP-Fragmented");
-}
-
-// ============================================================================
-// DOD Coherent Benchmarks
-// ============================================================================
-
-static void BM_DOD_Coherent_CreateEntities(benchmark::State& state) {
-    const int64_t entityCount = state.range(0);
-    for (auto _ : state) {
-        state.PauseTiming();
-        DOD_Coherent::EntityData data;
-        data.reserve(entityCount);
         RandomGenerator rng;
         state.ResumeTiming();
         for (int64_t i = 0; i < entityCount; ++i) {
-            data.addEntity(rng.next(), rng.next(), rng.next(), rng.next());
-        }
-        benchmark::DoNotOptimize(data);
-    }
-    state.SetItemsProcessed(state.iterations() * entityCount);
-    state.SetLabel("DOD-Coherent");
-}
-
-static void BM_DOD_Coherent_UpdatePositions(benchmark::State& state) {
-    const int64_t entityCount = state.range(0);
-    const float deltaTime = 1.0f / 60.0f;
-    DOD_Coherent::EntityData data;
-    data.reserve(entityCount);
-    RandomGenerator rng;
-    for (int64_t i = 0; i < entityCount; ++i) {
-        data.addEntity(rng.next(), rng.next(), rng.next(), rng.next());
-    }
-    for (auto _ : state) {
-        DOD_Coherent::updatePositions(data, deltaTime);
-        benchmark::DoNotOptimize(data);
-    }
-    state.SetItemsProcessed(state.iterations() * entityCount);
-    state.SetLabel("DOD-Coherent");
-}
-
-// ============================================================================
-// DOD Fragmented Benchmarks
-// ============================================================================
-
-static void BM_DOD_Fragmented_CreateEntities(benchmark::State& state) {
-    const int64_t entityCount = state.range(0);
-    for (auto _ : state) {
-        state.PauseTiming();
-        DOD_Fragmented::EntityData data;
-        data.reserve(entityCount);
-        RandomGenerator rng;
-        state.ResumeTiming();
-        for (int64_t i = 0; i < entityCount; ++i) {
-            data.addEntity(rng.next(), rng.next(), rng.next(), rng.next());
-        }
-        benchmark::DoNotOptimize(data);
-    }
-    state.SetItemsProcessed(state.iterations() * entityCount);
-    state.SetLabel("DOD-Fragmented");
-}
-
-static void BM_DOD_Fragmented_UpdatePositions(benchmark::State& state) {
-    const int64_t entityCount = state.range(0);
-    const float deltaTime = 1.0f / 60.0f;
-    DOD_Fragmented::EntityData data;
-    data.reserve(entityCount);
-    RandomGenerator rng;
-    for (int64_t i = 0; i < entityCount; ++i) {
-        data.addEntity(rng.next(), rng.next(), rng.next(), rng.next());
-    }
-    for (auto _ : state) {
-        data.updateAll(deltaTime);
-        benchmark::DoNotOptimize(data);
-    }
-    state.SetItemsProcessed(state.iterations() * entityCount);
-    state.SetLabel("DOD-Fragmented");
-}
-
-// ============================================================================
-// ECS Coherent Benchmarks
-// ============================================================================
-
-static void BM_ECS_Coherent_CreateEntities(benchmark::State& state) {
-    const int64_t entityCount = state.range(0);
-    for (auto _ : state) {
-        state.PauseTiming();
-        ECS_Coherent::EntityWorld world;
-        RandomGenerator rng;
-        state.ResumeTiming();
-        for (int64_t i = 0; i < entityCount; ++i) {
-            world.addEntity(rng.next(), rng.next(), rng.next(), rng.next());
+            world.addEntity(rng.next(), rng.next(), rng.next(), rng.next(), getEntityType(i, pattern));
         }
         benchmark::DoNotOptimize(world);
     }
     state.SetItemsProcessed(state.iterations() * entityCount);
-    state.SetLabel("ECS-Coherent");
+    state.SetLabel(label);
 }
 
-static void BM_ECS_Coherent_UpdatePositions(benchmark::State& state) {
+template<typename WorldType>
+static void BM_UpdateEntities(benchmark::State& state, DistributionPattern pattern, const char* label) {
     const int64_t entityCount = state.range(0);
     const float deltaTime = 1.0f / 60.0f;
-    ECS_Coherent::EntityWorld world;
+    
+    WorldType world;
+    if constexpr (requires { world.reserve(entityCount); }) {
+        world.reserve(entityCount);
+    }
     RandomGenerator rng;
     for (int64_t i = 0; i < entityCount; ++i) {
-        world.addEntity(rng.next(), rng.next(), rng.next(), rng.next());
+        world.addEntity(rng.next(), rng.next(), rng.next(), rng.next(), getEntityType(i, pattern));
     }
     for (auto _ : state) {
         world.updateAll(deltaTime);
         benchmark::DoNotOptimize(world);
     }
     state.SetItemsProcessed(state.iterations() * entityCount);
-    state.SetLabel("ECS-Coherent");
+    state.SetLabel(label);
 }
 
 // ============================================================================
-// ECS Fragmented Benchmarks
+// Benchmark Registration - Using BENCHMARK_CAPTURE for both type and pattern
 // ============================================================================
 
-static void BM_ECS_Fragmented_CreateEntities(benchmark::State& state) {
-    const int64_t entityCount = state.range(0);
-    for (auto _ : state) {
-        state.PauseTiming();
-        ECS_Fragmented::EntityWorld world;
-        RandomGenerator rng;
-        state.ResumeTiming();
-        for (int64_t i = 0; i < entityCount; ++i) {
-            world.addEntity(rng.next(), rng.next(), rng.next(), rng.next(), static_cast<int>(i));
-        }
-        benchmark::DoNotOptimize(world);
-    }
-    state.SetItemsProcessed(state.iterations() * entityCount);
-    state.SetLabel("ECS-Fragmented");
-}
-
-static void BM_ECS_Fragmented_UpdatePositions(benchmark::State& state) {
-    const int64_t entityCount = state.range(0);
-    const float deltaTime = 1.0f / 60.0f;
-    ECS_Fragmented::EntityWorld world;
-    RandomGenerator rng;
-    for (int64_t i = 0; i < entityCount; ++i) {
-        world.addEntity(rng.next(), rng.next(), rng.next(), rng.next(), static_cast<int>(i));
-    }
-    for (auto _ : state) {
-        world.updateAll(deltaTime);
-        benchmark::DoNotOptimize(world);
-    }
-    state.SetItemsProcessed(state.iterations() * entityCount);
-    state.SetLabel("ECS-Fragmented");
-}
-
-// ============================================================================
-// Benchmark Registration - Organized by Size, Pattern, and Operation
-// ============================================================================
-
-// Macro for registering all patterns at a given size
 #define REGISTER_SIZE_BENCHMARKS(Size) \
     /* Size: Creation - Coherent */ \
-    BENCHMARK(BM_ECS_Coherent_CreateEntities)->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK(BM_OOP_Coherent_CreateEntities)->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK(BM_DOD_Coherent_CreateEntities)->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_CreateEntities<ECS_Pattern::EntityWorld>, ECS_Coherent, DistributionPattern::Coherent, "ECS-Coherent")->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_CreateEntities<OOP_Pattern::EntityManager>, OOP_Coherent, DistributionPattern::Coherent, "OOP-Coherent")->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_CreateEntities<DOD_Pattern::EntityData>, DOD_Coherent, DistributionPattern::Coherent, "DOD-Coherent")->Arg(Size)->Unit(benchmark::kMicrosecond); \
     /* Size: Creation - Fragmented */ \
-    BENCHMARK(BM_ECS_Fragmented_CreateEntities)->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK(BM_OOP_Fragmented_CreateEntities)->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK(BM_DOD_Fragmented_CreateEntities)->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_CreateEntities<ECS_Pattern::EntityWorld>, ECS_Fragmented, DistributionPattern::Fragmented, "ECS-Fragmented")->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_CreateEntities<OOP_Pattern::EntityManager>, OOP_Fragmented, DistributionPattern::Fragmented, "OOP-Fragmented")->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_CreateEntities<DOD_Pattern::EntityData>, DOD_Fragmented, DistributionPattern::Fragmented, "DOD-Fragmented")->Arg(Size)->Unit(benchmark::kMicrosecond); \
     /* Size: Update - Coherent */ \
-    BENCHMARK(BM_ECS_Coherent_UpdatePositions)->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK(BM_OOP_Coherent_UpdatePositions)->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK(BM_DOD_Coherent_UpdatePositions)->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_UpdateEntities<ECS_Pattern::EntityWorld>, ECS_Coherent, DistributionPattern::Coherent, "ECS-Coherent")->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_UpdateEntities<OOP_Pattern::EntityManager>, OOP_Coherent, DistributionPattern::Coherent, "OOP-Coherent")->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_UpdateEntities<DOD_Pattern::EntityData>, DOD_Coherent, DistributionPattern::Coherent, "DOD-Coherent")->Arg(Size)->Unit(benchmark::kMicrosecond); \
     /* Size: Update - Fragmented */ \
-    BENCHMARK(BM_ECS_Fragmented_UpdatePositions)->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK(BM_OOP_Fragmented_UpdatePositions)->Arg(Size)->Unit(benchmark::kMicrosecond); \
-    BENCHMARK(BM_DOD_Fragmented_UpdatePositions)->Arg(Size)->Unit(benchmark::kMicrosecond);
+    BENCHMARK_CAPTURE(BM_UpdateEntities<ECS_Pattern::EntityWorld>, ECS_Fragmented, DistributionPattern::Fragmented, "ECS-Fragmented")->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_UpdateEntities<OOP_Pattern::EntityManager>, OOP_Fragmented, DistributionPattern::Fragmented, "OOP-Fragmented")->Arg(Size)->Unit(benchmark::kMicrosecond); \
+    BENCHMARK_CAPTURE(BM_UpdateEntities<DOD_Pattern::EntityData>, DOD_Fragmented, DistributionPattern::Fragmented, "DOD-Fragmented")->Arg(Size)->Unit(benchmark::kMicrosecond);
 
 // Register benchmarks for each size
 REGISTER_SIZE_BENCHMARKS(10)

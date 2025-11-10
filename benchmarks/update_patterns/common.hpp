@@ -18,6 +18,29 @@ private:
     std::uniform_real_distribution<float> dist_;
 };
 
+// Entity type distribution for fragmented benchmarks
+// Ensures all implementations create the same entity mix
+enum class EntityType : int {
+    Small = 0,
+    Medium = 1,
+    Large = 2
+};
+
+enum class DistributionPattern {
+    Coherent,   // All entities are the same type (Small)
+    Fragmented  // Mix of Small, Medium, Large in rotation
+};
+
+inline EntityType getEntityType(int64_t index, DistributionPattern pattern = DistributionPattern::Fragmented) {
+    if (pattern == DistributionPattern::Coherent) {
+        // All entities are Small type for coherent pattern
+        return EntityType::Small;
+    } else {
+        // Distribute entities evenly: Small, Medium, Large, Small, Medium, Large...
+        return static_cast<EntityType>(index % 3);
+    }
+}
+
 // ============================================================================
 // Shared Physics Logic
 // ============================================================================

@@ -237,7 +237,7 @@ namespace SubzeroECS
 					// Single component - just advance the iterator
 					++std::get<0>(iterators_);
 				}
-#if 1 // TODO: Profile vs the generic option! 
+#if 0 // TODO: Profile vs the generic option! 
 				else if constexpr (sizeof...(Components) == 2)
 				{
 					// Two-way intersection using classic std::set_intersection algorithm

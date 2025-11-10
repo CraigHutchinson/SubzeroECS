@@ -5,62 +5,9 @@
 #include "common.hpp"
 
 // ============================================================================
-// OOP Coherent - Homogeneous entities with virtual dispatch
-// ============================================================================
-namespace OOP_Coherent {
-
-// Base class for entities using virtual dispatch
-class EntityBase {
-public:
-    virtual ~EntityBase() = default;
-    virtual void update(float deltaTime) = 0;
-};
-
-// Concrete entity with position and velocity
-class MovingEntity : public EntityBase {
-public:
-    MovingEntity(float x, float y, float vx, float vy)
-        : x_(x), y_(y), vx_(vx), vy_(vy) {}
-
-    void update(float deltaTime) override {
-        Physics::updatePosition(x_, y_, vx_, vy_, deltaTime);
-    }
-
-    float getX() const { return x_; }
-    float getY() const { return y_; }
-
-private:
-    float x_, y_;   // Position
-    float vx_, vy_; // Velocity
-};
-
-// Manager class that owns all entities
-class EntityManager {
-public:
-    void addEntity(float x, float y, float vx, float vy) {
-        entities_.push_back(std::make_unique<MovingEntity>(x, y, vx, vy));
-    }
-
-    void updateAll(float deltaTime) {
-        for (auto& entity : entities_) {
-            entity->update(deltaTime);
-        }
-    }
-
-    size_t count() const {
-        return entities_.size();
-    }
-
-private:
-    std::vector<std::unique_ptr<EntityBase>> entities_;
-};
-
-} // namespace OOP_Coherent
-
-// ============================================================================
 // OOP Fragmented - Heterogeneous entities with different sizes
 // ============================================================================
-namespace OOP_Fragmented {
+namespace OOP_Pattern {
 
 // Base entity with virtual interface - forces vtable lookups
 class EntityBase {
@@ -146,16 +93,16 @@ private:
 // Entity manager using unique_ptr - pointer indirection, heap fragmentation
 class EntityManager {
 public:
-    void addEntity(float x, float y, float vx, float vy, int entityType = 0) {
+    void addEntity(float x, float y, float vx, float vy, EntityType entityType = EntityType::Small) {
         // Create different entity types to fragment memory
-        switch (entityType % 3) {
-            case 0:
+        switch (entityType) {
+            case EntityType::Small:
                 entities_.push_back(std::make_unique<SmallEntity>(x, y, vx, vy));
                 break;
-            case 1:
+            case EntityType::Medium:
                 entities_.push_back(std::make_unique<MediumEntity>(x, y, vx, vy));
                 break;
-            case 2:
+            case EntityType::Large:
                 entities_.push_back(std::make_unique<LargeEntity>(x, y, vx, vy));
                 break;
         }
@@ -175,4 +122,4 @@ private:
     std::vector<std::unique_ptr<EntityBase>> entities_;
 };
 
-} // namespace OOP_Fragmented
+} // namespace OOP_Pattern

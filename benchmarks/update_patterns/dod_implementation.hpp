@@ -4,57 +4,9 @@
 #include "common.hpp"
 
 // ============================================================================
-// DOD Coherent - Structure of Arrays (SoA)
-// ============================================================================
-namespace DOD_Coherent {
-
-struct EntityData {
-    std::vector<float> positions_x;
-    std::vector<float> positions_y;
-    std::vector<float> velocities_x;
-    std::vector<float> velocities_y;
-
-    size_t size() const {
-        return positions_x.size();
-    }
-
-    void reserve(size_t count) {
-        positions_x.reserve(count);
-        positions_y.reserve(count);
-        velocities_x.reserve(count);
-        velocities_y.reserve(count);
-    }
-
-    void addEntity(float x, float y, float vx, float vy) {
-        positions_x.push_back(x);
-        positions_y.push_back(y);
-        velocities_x.push_back(vx);
-        velocities_y.push_back(vy);
-    }
-};
-
-// Update function that operates on the data arrays
-inline void updatePositions(EntityData& data, float deltaTime) {
-    const size_t count = data.size();
-    
-    // Process all data in contiguous memory - excellent cache locality
-    for (size_t i = 0; i < count; ++i) {
-        Physics::updatePosition(
-            data.positions_x[i],
-            data.positions_y[i],
-            data.velocities_x[i],
-            data.velocities_y[i],
-            deltaTime
-        );
-    }
-}
-
-} // namespace DOD_Coherent
-
-// ============================================================================
 // DOD Fragmented - Array of SoA structures (one per entity type)
 // ============================================================================
-namespace DOD_Fragmented {
+namespace DOD_Pattern {
 
 // Small entity SoA - just position and velocity
 struct SmallEntities {
@@ -185,22 +137,26 @@ struct LargeEntities {
 class EntityData {
 public:
     void reserve(size_t count) {
-        // Estimate roughly even distribution across types
         size_t per_type = count / 3;
+        // Estimate roughly even distribution across types
         small_.reserve(per_type);
+#if 0  // TODO; For coherant this is a bad approach!
         medium_.reserve(per_type);
         large_.reserve(per_type);
+#endif
     }
 
-    void addEntity(float x, float y, float vx, float vy, int entityType = 0) {
-        int type = entityType % 3;
-        
-        if (type == 0) {
-            small_.add(x, y, vx, vy);
-        } else if (type == 1) {
-            medium_.add(x, y, vx, vy);
-        } else {
-            large_.add(x, y, vx, vy);
+    void addEntity(float x, float y, float vx, float vy, EntityType entityType = EntityType::Small) {
+        switch (entityType) {
+            case EntityType::Small:
+                small_.add(x, y, vx, vy);
+                break;
+            case EntityType::Medium:
+                medium_.add(x, y, vx, vy);
+                break;
+            case EntityType::Large:
+                large_.add(x, y, vx, vy);
+                break;
         }
     }
 
@@ -220,4 +176,4 @@ private:
     LargeEntities large_;
 };
 
-} // namespace DOD_Fragmented
+} // namespace DOD_Pattern
