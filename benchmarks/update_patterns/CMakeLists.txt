@@ -1,15 +1,16 @@
 cmake_minimum_required(VERSION 3.14...3.22)
 
-# Create the benchmark executable
-add_executable(coherent_update_benchmark
+# Create the unified update patterns benchmark executable
+add_executable(update_patterns_benchmark
     main.cpp
+    common.hpp
     oop_implementation.hpp
     dod_implementation.hpp
     ecs_implementation.hpp
 )
 
 # Link against SubzeroECS and Google Benchmark
-target_link_libraries(coherent_update_benchmark
+target_link_libraries(update_patterns_benchmark
     PRIVATE
         SubzeroECS::SubzeroECS
         benchmark::benchmark
@@ -17,13 +18,13 @@ target_link_libraries(coherent_update_benchmark
 )
 
 # Set C++ standard
-target_compile_features(coherent_update_benchmark PRIVATE cxx_std_20)
+target_compile_features(update_patterns_benchmark PRIVATE cxx_std_20)
 
 # Enable optimizations for benchmarks
 # Note: Benchmarks should always be built in Release mode for accurate results
 if(MSVC)
     # Replace default flags to avoid /RTC1 conflict with /O2 in Debug builds
-    target_compile_options(coherent_update_benchmark PRIVATE
+    target_compile_options(update_patterns_benchmark PRIVATE
         /W4                                  # Warning level 4
         $<$<CONFIG:Debug>:/Od>              # Debug: Disable optimization (use Release preset instead!)
         $<$<CONFIG:Release>:/O2             # Release: Full optimization
@@ -38,7 +39,7 @@ if(MSVC)
            >
     )
     # Enable link-time optimizations in Release
-    target_link_options(coherent_update_benchmark PRIVATE
+    target_link_options(update_patterns_benchmark PRIVATE
         $<$<CONFIG:Release>:/LTCG>          # Link-time code generation
         $<$<CONFIG:RelWithDebInfo>:/LTCG>
     )
@@ -49,7 +50,7 @@ if(MSVC)
     endif()
 else()
     # GCC/Clang
-    target_compile_options(coherent_update_benchmark PRIVATE
+    target_compile_options(update_patterns_benchmark PRIVATE
         $<$<CONFIG:Debug>:-O0>              # Debug: No optimization (use Release preset instead!)
         $<$<CONFIG:Release>:-O3             # Release: Maximum optimization
             -march=native                    # Optimize for this CPU
@@ -59,13 +60,13 @@ else()
         -Wall -Wextra                        # Enable warnings
     )
     # Enable link-time optimizations in Release
-    target_link_options(coherent_update_benchmark PRIVATE
+    target_link_options(update_patterns_benchmark PRIVATE
         $<$<CONFIG:Release>:-flto>          # Link-time optimization
     )
 endif()
 
 # Ensure NDEBUG is defined in Release builds (disables asserts)
-target_compile_definitions(coherent_update_benchmark PRIVATE
+target_compile_definitions(update_patterns_benchmark PRIVATE
     $<$<CONFIG:Release>:NDEBUG>
     $<$<CONFIG:RelWithDebInfo>:NDEBUG>
 )

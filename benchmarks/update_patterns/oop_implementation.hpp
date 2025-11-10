@@ -2,8 +2,64 @@
 
 #include <vector>
 #include <memory>
-#include <cmath>
+#include "common.hpp"
 
+// ============================================================================
+// OOP Coherent - Homogeneous entities with virtual dispatch
+// ============================================================================
+namespace OOP_Coherent {
+
+// Base class for entities using virtual dispatch
+class EntityBase {
+public:
+    virtual ~EntityBase() = default;
+    virtual void update(float deltaTime) = 0;
+};
+
+// Concrete entity with position and velocity
+class MovingEntity : public EntityBase {
+public:
+    MovingEntity(float x, float y, float vx, float vy)
+        : x_(x), y_(y), vx_(vx), vy_(vy) {}
+
+    void update(float deltaTime) override {
+        Physics::updatePosition(x_, y_, vx_, vy_, deltaTime);
+    }
+
+    float getX() const { return x_; }
+    float getY() const { return y_; }
+
+private:
+    float x_, y_;   // Position
+    float vx_, vy_; // Velocity
+};
+
+// Manager class that owns all entities
+class EntityManager {
+public:
+    void addEntity(float x, float y, float vx, float vy) {
+        entities_.push_back(std::make_unique<MovingEntity>(x, y, vx, vy));
+    }
+
+    void updateAll(float deltaTime) {
+        for (auto& entity : entities_) {
+            entity->update(deltaTime);
+        }
+    }
+
+    size_t count() const {
+        return entities_.size();
+    }
+
+private:
+    std::vector<std::unique_ptr<EntityBase>> entities_;
+};
+
+} // namespace OOP_Coherent
+
+// ============================================================================
+// OOP Fragmented - Heterogeneous entities with different sizes
+// ============================================================================
 namespace OOP_Fragmented {
 
 // Base entity with virtual interface - forces vtable lookups
@@ -15,7 +71,6 @@ public:
     virtual float getY() const = 0;
 };
 
-// Different entity types with varying sizes - fragments memory
 // Small entity with just position and velocity
 class SmallEntity : public EntityBase {
 public:
@@ -23,16 +78,7 @@ public:
         : x_(x), y_(y), vx_(vx), vy_(vy) {}
 
     void update(float deltaTime) override {
-        x_ += vx_ * deltaTime;
-        y_ += vy_ * deltaTime;
-        vy_ += 9.8f * deltaTime;
-        vx_ *= 0.99f;
-        vy_ *= 0.99f;
-        
-        if (x_ < 0.0f) x_ += 1000.0f;
-        if (x_ > 1000.0f) x_ -= 1000.0f;
-        if (y_ < 0.0f) y_ += 1000.0f;
-        if (y_ > 1000.0f) y_ -= 1000.0f;
+        Physics::updatePosition(x_, y_, vx_, vy_, deltaTime);
     }
 
     float getX() const override { return x_; }
@@ -42,7 +88,7 @@ private:
     float x_, y_, vx_, vy_;
 };
 
-// Medium entity with additional data - different size from SmallEntity
+// Medium entity with additional data
 class MediumEntity : public EntityBase {
 public:
     MediumEntity(float x, float y, float vx, float vy)
@@ -52,19 +98,9 @@ public:
         , scale_(1.0f) {}
 
     void update(float deltaTime) override {
-        x_ += vx_ * deltaTime;
-        y_ += vy_ * deltaTime;
-        vy_ += 9.8f * deltaTime;
-        vx_ *= 0.99f;
-        vy_ *= 0.99f;
-        
+        Physics::updatePosition(x_, y_, vx_, vy_, deltaTime);
         rotation_ += 0.1f * deltaTime;
         health_ -= 0.01f * deltaTime;
-        
-        if (x_ < 0.0f) x_ += 1000.0f;
-        if (x_ > 1000.0f) x_ -= 1000.0f;
-        if (y_ < 0.0f) y_ += 1000.0f;
-        if (y_ > 1000.0f) y_ -= 1000.0f;
     }
 
     float getX() const override { return x_; }
@@ -77,7 +113,7 @@ private:
     float scale_;
 };
 
-// Large entity with lots of data - creates even more fragmentation
+// Large entity with lots of data
 class LargeEntity : public EntityBase {
 public:
     LargeEntity(float x, float y, float vx, float vy)
@@ -90,19 +126,9 @@ public:
         , flags_(0) {}
 
     void update(float deltaTime) override {
-        x_ += vx_ * deltaTime;
-        y_ += vy_ * deltaTime;
-        vy_ += 9.8f * deltaTime;
-        vx_ *= 0.99f;
-        vy_ *= 0.99f;
-        
+        Physics::updatePosition(x_, y_, vx_, vy_, deltaTime);
         rotation_ += 0.1f * deltaTime;
         health_ -= 0.01f * deltaTime;
-        
-        if (x_ < 0.0f) x_ += 1000.0f;
-        if (x_ > 1000.0f) x_ -= 1000.0f;
-        if (y_ < 0.0f) y_ += 1000.0f;
-        if (y_ > 1000.0f) y_ -= 1000.0f;
     }
 
     float getX() const override { return x_; }
@@ -116,14 +142,14 @@ private:
     float color_[4];
     int team_;
     int flags_;
-    char padding_[64]; // Extra padding to fragment memory even more
+    char padding_[64]; // Extra padding to fragment memory
 };
 
 // Entity manager using unique_ptr - pointer indirection, heap fragmentation
 class EntityManager {
 public:
     void addEntity(float x, float y, float vx, float vy, int entityType = 0) {
-        // Randomly create different entity types to fragment memory
+        // Create different entity types to fragment memory
         switch (entityType % 3) {
             case 0:
                 entities_.push_back(std::make_unique<SmallEntity>(x, y, vx, vy));
@@ -138,8 +164,6 @@ public:
     }
 
     void updateAll(float deltaTime) {
-        // Pointer chasing - each entity is allocated separately on heap
-        // Virtual function calls - additional indirection through vtable
         for (auto& entity : entities_) {
             entity->update(deltaTime);
         }

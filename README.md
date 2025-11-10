@@ -1,66 +1,196 @@
-[![Actions Status](https://github.com/TheLartians/ModernCppStarter/workflows/MacOS/badge.svg)](https://github.com/TheLartians/ModernCppStarter/actions)
-[![Actions Status](https://github.com/TheLartians/ModernCppStarter/workflows/Windows/badge.svg)](https://github.com/TheLartians/ModernCppStarter/actions)
-[![Actions Status](https://github.com/TheLartians/ModernCppStarter/workflows/Ubuntu/badge.svg)](https://github.com/TheLartians/ModernCppStarter/actions)
-[![Actions Status](https://github.com/TheLartians/ModernCppStarter/workflows/Style/badge.svg)](https://github.com/TheLartians/ModernCppStarter/actions)
-[![Actions Status](https://github.com/TheLartians/ModernCppStarter/workflows/Install/badge.svg)](https://github.com/TheLartians/ModernCppStarter/actions)
-[![codecov](https://codecov.io/gh/TheLartians/ModernCppStarter/branch/master/graph/badge.svg)](https://codecov.io/gh/TheLartians/ModernCppStarter)
-
-<p align="center">
-  <img src="https://repository-images.githubusercontent.com/254842585/4dfa7580-7ffb-11ea-99d0-46b8fe2f4170" height="175" width="auto" />
-</p>
-
 # SubzeroECS
 
+A high-performance, cache-friendly Entity Component System (ECS) framework for modern C++20 applications.
 
 ## Features
 
-- TODO
+- **Modern C++20**: Leverages latest C++ features for type safety and performance
+- **Cache-Friendly Design**: Structure of Arrays (SoA) component storage for optimal cache utilization
+- **Flexible Queries**: Powerful view and query system for efficient entity iteration
+- **Type-Safe Components**: Compile-time type checking for component access
+- **Minimal Fragmentation Impact**: Handles mixed entity compositions efficiently
+- **Zero-Cost Abstractions**: CRTP-based systems with minimal runtime overhead
+- **Header-Only Core**: Easy integration into existing projects
+
+## Quick Start
+
+```cpp
+#include "SubzeroECS/World.hpp"
+#include "SubzeroECS/System.hpp"
+
+// Define components
+struct Position { float x, y; };
+struct Velocity { float dx, dy; };
+
+// Create a system
+class PhysicsSystem : public SubzeroECS::System<PhysicsSystem, Position, Velocity> {
+public:
+    float deltaTime = 0.0f;
+    
+    PhysicsSystem(SubzeroECS::World& world)
+        : SubzeroECS::System<PhysicsSystem, Position, Velocity>(world) {}
+
+    void processEntity(Iterator iEntity) {
+        Position& pos = iEntity.get<Position>();
+        Velocity& vel = iEntity.get<Velocity>();
+        
+        pos.x += vel.dx * deltaTime;
+        pos.y += vel.dy * deltaTime;
+    }
+};
+
+// Use the ECS
+int main() {
+    SubzeroECS::World world;
+    SubzeroECS::Collection<Position, Velocity> collections(world);
+    PhysicsSystem physics(world);
+    
+    // Create entities
+    world.create(Position{0.0f, 0.0f}, Velocity{1.0f, 1.0f});
+    world.create(Position{10.0f, 5.0f}, Velocity{-0.5f, 2.0f});
+    
+    // Update
+    physics.deltaTime = 1.0f / 60.0f;
+    physics.update();
+    
+    return 0;
+}
+```
+
+## Performance
+
+SubzeroECS demonstrates excellent performance characteristics, particularly in handling fragmented entity compositions. Benchmark results comparing SubzeroECS against traditional OOP and DOD approaches:
+
+**Test System:**
+- CPU: Intel Core i7-11800H @ 2.30GHz (8 cores, 16 logical processors)
+- L1 Data Cache: 48 KiB × 8
+- L1 Instruction Cache: 32 KiB × 8
+- L2 Cache: 1280 KiB × 8
+- L3 Cache: 24576 KiB (24 MB)
+- Compiler: MSVC with `/O2` optimization
+- OS: Windows
+
+### Update Performance at 100K Entities
+
+| Implementation | Coherent (M items/s) | Fragmented (M items/s) | Impact |
+|----------------|---------------------|------------------------|--------|
+| **SubzeroECS** | 182.86              | 182.86                 | **0%** ✓ |
+| **OOP**        | 265.26              | 199.11                 | -25% |
+| **DOD (SoA)**  | 542.98              | 568.84                 | +5% (noise) |
+
+### Update Performance at 10M Entities
+
+| Implementation | Coherent (M items/s) | Fragmented (M items/s) | Impact |
+|----------------|---------------------|------------------------|--------|
+| **SubzeroECS** | 140.49              | 144.00                 | **+2%** (noise) ✓ |
+| **OOP**        | 140.49              | 67.37                  | -52% |
+| **DOD (SoA)**  | 238.14              | 156.10                 | -34% |
+
+**Key Findings:**
+- SubzeroECS shows **minimal performance degradation** with mixed entity compositions (fragmentation)
+- Traditional OOP suffers **52% slowdown** at scale with heterogeneous entity types
+- Pure DOD Structure-of-Arrays is faster in absolute terms but SubzeroECS provides better developer ergonomics with competitive performance
+- All implementations experience cache pressure at 10M+ entities (expected behavior)
+
+See [benchmarks/update_patterns](benchmarks/update_patterns) for detailed benchmark code and methodology.
+
+## Building SubzeroECS
+
+### Using CMake Presets (Recommended)
+
+```bash
+# Configure for release build
+cmake --preset windows-x64-release
+
+# Build the library
+cmake --build --preset windows-x64-release
+
+# Run tests
+ctest --preset windows-x64-release
+```
+
+### Available Presets
+
+- `windows-x64-debug` - Debug build with assertions
+- `windows-x64-release` - Optimized release build
+- `windows-x64-release-benchmark` - Release build with benchmarks enabled
+
+### Building from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/CraigHutchinson/SubzeroECS.git
+cd SubzeroECS
+
+# Configure and build
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+
+# Run tests
+cd build/test
+ctest --output-on-failure
+```
+
+## Project Structure
+
+```
+SubzeroECS/
+├── source/SubzeroECS/          # Core ECS implementation
+│   ├── World.hpp               # Entity and world management
+│   ├── Collection.hpp          # Component storage (SoA)
+│   ├── System.hpp              # System base class (CRTP)
+│   ├── View.hpp                # Multi-component queries
+│   ├── Entity.hpp              # Entity handle
+│   └── Utility/                # Helper utilities
+├── samples/                    # Example applications
+│   └── rocket/                 # Physics simulation example
+├── benchmarks/                 # Performance benchmarks
+│   └── update_patterns/        # Unified coherent vs fragmented comparison
+└── test/                       # Unit tests
+```
 
 ## Usage
 
-### Adjust the template to your needs
-
-- Use this repo [as a template](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template).
-- Replace all occurrences of "SubzeroECS" in the relevant CMakeLists.txt with the name of your project
-  - Capitalization matters here: `SubzeroECS` means the name of the project, while `SubzeroECS` is used in file names.
-  - Remember to rename the `include/SubzeroECS` directory to use your project's lowercase name and update all relevant `#include`s accordingly.
-- Replace the source files with your own
-- For header-only libraries: see the comments in [CMakeLists.txt](CMakeLists.txt)
-- Add [your project's codecov token](https://docs.codecov.io/docs/quick-start) to your project's github secrets under `CODECOV_TOKEN`
-- Happy coding!
-
-Eventually, you can remove any unused files, such as the standalone directory or irrelevant github workflows for your project.
-Feel free to replace the License with one suited for your project.
-
-To cleanly separate the library and subproject code, the outer `CMakeList.txt` only defines the library itself while the tests and other subprojects are self-contained in their own directories. 
-During development it is usually convenient to [build all subprojects at once](#build-everything-at-once).
-
-### Build and run the standalone target
-
-Use the following command to build and run the executable target.
-
-```bash
-cmake -S standalone -B build/standalone
-cmake --build build/standalone
-./build/standalone/SubzeroECS --help
-```
-
-### Build and run test suite
+### Running Tests
 
 Use the following commands from the project's root directory to run the test suite.
 
 ```bash
+# Using presets
+ctest --preset windows-x64-release
+
+# Or manually
 cmake -S test -B build/test
 cmake --build build/test
-CTEST_OUTPUT_ON_FAILURE=1 cmake --build build/test --target test
-
-# or simply call the executable: 
 ./build/test/SubzeroECSTests
 ```
 
-To collect code coverage information, run CMake with the `-DENABLE_TEST_COVERAGE=1` option.
+### Running Benchmarks
 
-### Run clang-format
+```bash
+# Build benchmarks
+cmake --preset windows-x64-release-benchmark
+cmake --build --preset windows-x64-release-benchmark
+
+# Run unified update patterns benchmark
+./out/Windows-build/windows-x64-release-benchmark/benchmarks/update_patterns/Release/update_patterns_benchmark.exe
+
+# Filter specific tests
+./update_patterns_benchmark.exe --benchmark_filter="BM_ECS.*"
+./update_patterns_benchmark.exe --benchmark_filter=".*UpdatePositions.*/100000"
+```
+
+### Running Samples
+
+```bash
+# Build and run the rocket physics sample
+cmake --build --preset windows-x64-release --target RocketSample
+./out/Windows-build/windows-x64-release/samples/rocket/Release/RocketSample.exe
+```
+
+## Development
+
+### Code Formatting
 
 Use the following commands from the project's root directory to check and fix C++ and CMake source style.
 This requires _clang-format_, _cmake-format_ and _pyyaml_ to be installed on the current system.
@@ -82,10 +212,19 @@ These dependencies can be easily installed using pip.
 pip install clang-format==14.0.6 cmake_format==0.6.11 pyyaml
 ```
 
-### Build the documentation
+### Static Analysis
 
-The documentation is automatically built and [published](https://thelartians.github.io/ModernCppStarter) whenever a [GitHub Release](https://help.github.com/en/github/administering-a-repository/managing-releases-in-a-repository) is created.
-To manually build documentation, call the following command.
+Static Analyzers can be enabled by setting `-DUSE_STATIC_ANALYZER=<clang-tidy | iwyu | cppcheck>`, or a combination of those in quotation marks, separated by semicolons.
+Additional arguments can be passed to the analyzers by setting the `CLANG_TIDY_ARGS`, `IWYU_ARGS` or `CPPCHECK_ARGS` variables.
+
+### Sanitizers
+
+Sanitizers can be enabled by configuring CMake with `-DUSE_SANITIZER=<Address | Memory | MemoryWithOrigins | Undefined | Thread | Leak | 'Address;Undefined'>`.
+
+## Documentation
+
+The documentation is automatically built and published whenever a GitHub Release is created.
+To manually build documentation, call the following command:
 
 ```bash
 cmake -S documentation -B build/doc
@@ -96,120 +235,67 @@ open build/doc/doxygen/html/index.html
 
 To build the documentation locally, you will need Doxygen, jinja2 and Pygments installed on your system.
 
-### Build everything at once
+## Architecture
 
-The project also includes an `all` directory that allows building all targets at the same time.
-This is useful during development, as it exposes all subprojects to your IDE and avoids redundant builds of the library.
+SubzeroECS uses several key design patterns:
 
-```bash
-cmake -S all -B build
-cmake --build build
+- **CRTP Systems**: Zero-overhead polymorphism for systems via Curiously Recurring Template Pattern
+- **SoA Storage**: Components stored in Structure of Arrays for cache-friendly iteration
+- **Set Intersection Views**: Efficient multi-component queries using sorted entity ID arrays
+- **Type-Safe Collections**: Compile-time component type verification
+- **Entity ID Recycling**: Free-list based entity ID reuse to prevent ID exhaustion
 
-# run tests
-./build/test/SubzeroECSTests
-# format code
-cmake --build build --target fix-format
-# run standalone
-./build/standalone/SubzeroECS --help
-# build docs
-cmake --build build --target GenerateDocs
-```
+## Contributing
 
-### Additional tools
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-The test and standalone subprojects include the [tools.cmake](cmake/tools.cmake) file which is used to import additional tools on-demand through CMake configuration arguments.
-The following are currently supported.
-
-#### Sanitizers
-
-Sanitizers can be enabled by configuring CMake with `-DUSE_SANITIZER=<Address | Memory | MemoryWithOrigins | Undefined | Thread | Leak | 'Address;Undefined'>`.
-
-#### Static Analyzers
-
-Static Analyzers can be enabled by setting `-DUSE_STATIC_ANALYZER=<clang-tidy | iwyu | cppcheck>`, or a combination of those in quotation marks, separated by semicolons.
-By default, analyzers will automatically find configuration files such as `.clang-format`.
-Additional arguments can be passed to the analyzers by setting the `CLANG_TIDY_ARGS`, `IWYU_ARGS` or `CPPCHECK_ARGS` variables.
-
-#### Ccache
-
-Ccache can be enabled by configuring with `-DUSE_CCACHE=<ON | OFF>`.
+All contributions are accepted under the dual-license terms (AGPL-3.0 for open source, commercial license available).
 
 ## FAQ
 
-> Can I use this for header-only libraries?
+### What makes SubzeroECS different from other ECS frameworks?
 
-Yes, however you will need to change the library type to an `INTERFACE` library as documented in the [CMakeLists.txt](CMakeLists.txt).
-See [here](https://github.com/TheLartians/StaticTypeInfo) for an example header-only library based on the template.
+SubzeroECS prioritizes:
+- Modern C++20 features for clean, type-safe APIs
+- Minimal performance impact from entity composition fragmentation
+- Header-mostly implementation for easy integration
+- Clear, maintainable codebase suitable for learning and modification
 
-> I don't need a standalone target / documentation. How can I get rid of it?
+### Can I use this for commercial projects?
 
-Simply remove the standalone / documentation directory and according github workflow file.
+Yes, SubzeroECS offers dual licensing:
+- Open source projects can use the AGPL-3.0 license
+- Commercial/proprietary projects should request a commercial license (see Licensing section below)
 
-> Can I build the standalone and tests at the same time? / How can I tell my IDE about all subprojects?
+### How does performance compare to raw arrays?
 
-To keep the template modular, all subprojects derived from the library have been separated into their own CMake modules.
-This approach makes it trivial for third-party projects to re-use the projects library code.
-To allow IDEs to see the full scope of the project, the template includes the `all` directory that will create a single build for all subprojects.
-Use this as the main directory for best IDE support.
+For coherent access patterns (all entities with same components), SubzeroECS achieves ~33% of pure DOD SoA performance (182M vs 543M items/s) while providing significantly better developer ergonomics. The overhead comes from the view iteration and set intersection logic, which enables the flexible query system.
 
-> I see you are using `GLOB` to add source files in CMakeLists.txt. Isn't that evil?
+### What's the entity capacity?
 
-Glob is considered bad because any changes to the source file structure [might not be automatically caught](https://cmake.org/cmake/help/latest/command/file.html#filesystem) by CMake's builders and you will need to manually invoke CMake on changes.
-  I personally prefer the `GLOB` solution for its simplicity, but feel free to change it to explicitly listing sources.
+SubzeroECS uses 32-bit entity IDs with generation counters, supporting millions of concurrent entities with ID recycling.
 
-> I want create additional targets that depend on my library. Should I modify the main CMakeLists to include them?
+## Related Projects
 
-Avoid including derived projects from the libraries CMakeLists (even though it is a common sight in the C++ world), as this effectively inverts the dependency tree and makes the build system hard to reason about.
-Instead, create a new directory or project with a CMakeLists that adds the library as a dependency (e.g. like the [standalone](standalone/CMakeLists.txt) directory).
-Depending type it might make sense move these components into a separate repositories and reference a specific commit or version of the library.
-This has the advantage that individual libraries and components can be improved and updated independently.
-
-> You recommend to add external dependencies using CPM.cmake. Will this force users of my library to use CPM.cmake as well?
-
-[CPM.cmake](https://github.com/TheLartians/CPM.cmake) should be invisible to library users as it's a self-contained CMake Script.
-If problems do arise, users can always opt-out by defining the CMake or env variable [`CPM_USE_LOCAL_PACKAGES`](https://github.com/cpm-cmake/CPM.cmake#options), which will override all calls to `CPMAddPackage` with the according `find_package` call.
-This should also enable users to use the project with their favorite external C++ dependency manager, such as vcpkg or Conan.
-
-> Can I configure and build my project offline?
-
-No internet connection is required for building the project, however when using CPM missing dependencies are downloaded at configure time.
-To avoid redundant downloads, it's highly recommended to set a CPM.cmake cache directory, e.g.: `export CPM_SOURCE_CACHE=$HOME/.cache/CPM`.
-This will enable shallow clones and allow offline configurations dependencies are already available in the cache.
-
-> Can I use CPack to create a package installer for my project?
-
-As there are a lot of possible options and configurations, this is not (yet) in the scope of this template. See the [CPack documentation](https://cmake.org/cmake/help/latest/module/CPack.html) for more information on setting up CPack installers.
-
-> This is too much, I just want to play with C++ code and test some libraries.
-
-Perhaps the [MiniCppStarter](https://github.com/TheLartians/MiniCppStarter) is something for you!
-
-## Related projects and alternatives
-
-- [**ModernCppStarter & PVS-Studio Static Code Analyzer**](https://github.com/viva64/pvs-studio-cmake-examples/tree/master/modern-cpp-starter): Official instructions on how to use the ModernCppStarter with the PVS-Studio Static Code Analyzer.
-- [**cpp-best-practices/gui_starter_template**](https://github.com/cpp-best-practices/gui_starter_template/): A popular C++ starter project, created in 2017.
-- [**filipdutescu/modern-cpp-template**](https://github.com/filipdutescu/modern-cpp-template): A recent starter using a more traditional approach for CMake structure and dependency management.
-- [**vector-of-bool/pitchfork**](https://github.com/vector-of-bool/pitchfork/): Pitchfork is a Set of C++ Project Conventions.
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=TheLartians/ModernCppStarter,cpp-best-practices/gui_starter_template,filipdutescu/modern-cpp-template&type=Date)](https://star-history.com/#TheLartians/ModernCppStarter&cpp-best-practices/gui_starter_template&filipdutescu/modern-cpp-template&Date)
+- [EnTT](https://github.com/skypjack/entt): High-performance ECS framework for C++17
+- [flecs](https://github.com/SanderMertens/flecs): Fast and lightweight ECS with relationship support
+- [EntityX](https://github.com/alecthomas/entityx): Fast, type-safe C++11 ECS
 
 ## Licensing
 
 SubzeroECS is dual-licensed:
 
-- Open Source: AGPL-3.0-only (see [LICENSE](LICENSE))
-- Commercial: Proprietary license for closed-source embedding, private modifications, or SaaS operation without AGPL disclosure. Request access by opening a GitHub issue titled “Commercial License Request: <Your Organization Name>” (see [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)).
+- **Open Source**: AGPL-3.0-only (see [LICENSE](LICENSE))
+- **Commercial**: Proprietary license for closed-source embedding, private modifications, or SaaS operation without AGPL disclosure
 
-Historical Versions:
-Releases prior to v1.0 were published under the Unlicense (public domain).
-
-Why AGPL?
+**Why AGPL?**
 Ensures improvements used in network-accessible deployments remain available to the community.
 
-How to Request Commercial Terms:
-Open an issue using the “Commercial License Request” template and provide intended use, scale, and timeline.
+**How to Request Commercial Terms:**
+Open a GitHub issue titled "Commercial License Request: [Your Organization Name]" with your intended use, scale, and timeline.
 
-Contributions:
+**Historical Versions:**
+Releases prior to v1.0 were published under the Unlicense (public domain).
+
+**Contributions:**
 See [CONTRIBUTING.md](CONTRIBUTING.md) for dual-license inbound contribution terms.
