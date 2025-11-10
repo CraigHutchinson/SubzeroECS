@@ -43,4 +43,16 @@ inline void updatePosition(float& x, float& y, float& vx, float& vy, float delta
     if (y > 1000.0f) y -= 1000.0f;
 }
 
+inline void updateRotationHealth(float& rotation, float& health, float deltaTime) {
+    rotation += 0.1f * deltaTime;
+    health -= 0.01f * deltaTime;
+}
+
+inline void pulseScale(float& scale, float deltaTime) {
+    // Pulse the scale - simulate some additional work
+    // that uses data that could exist on medium entities too
+    scale *= (1.0f + 0.001f * deltaTime);
+    if (scale > 2.0f) scale = 1.0f;  // Reset if too large
+}
+
 } // namespace Physics

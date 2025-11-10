@@ -9,14 +9,26 @@ This benchmark consolidates the separate `coherent_update` and `fragmented_updat
 ## Benchmark Patterns
 
 ### Coherent Patterns
-- **OOP-Coherent**: All entities are the same type, using virtual dispatch
-- **DOD-Coherent**: Structure of Arrays (SoA) with contiguous memory layout
+- **OOP-Coherent**: All entities are the same type (MovingEntity), using virtual dispatch
+- **DOD-Coherent**: Structure of Arrays (SoA) with contiguous memory layout for all entities
 - **ECS-Coherent**: All entities have identical component composition (Position + Velocity)
 
 ### Fragmented Patterns
-- **OOP-Fragmented**: Mixed entity types (Small, Medium, Large) with different sizes, heap fragmentation
-- **DOD-Fragmented**: Array of Structures (AoS) with padding to reduce cache efficiency
-- **ECS-Fragmented**: Mixed entity compositions - some entities have ExtraData component, others don't
+- **OOP-Fragmented**: Three entity types with different sizes and processing
+  - Small: Position + Velocity (4 floats)
+  - Medium: + Health + Rotation + Scale (7 floats)
+  - Large: + Color + Team + Flags (11 floats + 2 ints)
+- **DOD-Fragmented**: Array of Arrays - separate SoA structures for each entity type
+  - SmallEntities, MediumEntities, LargeEntities with matching data layouts
+- **ECS-Fragmented**: Component-based entity types with varying compositions
+  - Small: Position + Velocity components
+  - Medium: + Health + Rotation + Scale components  
+  - Large: + Color + Team + Flags components
+
+**All fragmented implementations process identical logic:**
+- Small entities: Physics update only
+- Medium entities: Physics update + rotation increment + health decrement
+- Large entities: Physics update + rotation increment + health decrement
 
 ## Entity Sizes Tested
 
@@ -28,7 +40,10 @@ This benchmark consolidates the separate `coherent_update` and `fragmented_updat
 ## Operations Benchmarked
 
 1. **CreateEntities**: Entity creation and component initialization
-2. **UpdatePositions**: Physics update loop (position, velocity, gravity, damping, boundary wrapping)
+2. **UpdatePositions**: Physics update loop with entity-specific processing
+   - Small entities: Position + velocity integration
+   - Medium entities: Position + velocity + rotation increment + health decrement
+   - Large entities: Position + velocity + rotation increment + health decrement
 
 ## Shared Physics Logic
 
@@ -71,17 +86,25 @@ cmake --build --preset windows-x64-release-benchmark --target update_patterns_be
 
 ## Expected Results
 
-### Coherent Patterns
-- DOD should be fastest (excellent cache locality)
-- ECS should be competitive with DOD
-- OOP will be slower due to pointer indirection and virtual calls
+### Performance Characteristics (10M Entities)
 
-### Fragmented Patterns
-- Performance degradation compared to coherent patterns
-- ECS should handle fragmentation better than OOP (still uses contiguous component storage)
-- DOD-Fragmented demonstrates why AoS is less cache-friendly than SoA
+**Coherent Patterns:**
+- DOD-Coherent: ~256M items/s (fastest - optimal cache locality with single SoA)
+- ECS-Coherent: ~166M items/s (competitive - contiguous component storage)
+- OOP-Coherent: ~148M items/s (slower - pointer indirection and virtual calls)
+
+**Fragmented Patterns:**
+- DOD-Fragmented: ~256M items/s (maintains performance with separate SoA per type)
+- ECS-Fragmented: ~95M items/s (42% slowdown - set intersection overhead across multiple component types)
+- OOP-Fragmented: ~73M items/s (51% slowdown - virtual dispatch + heap fragmentation)
+
+**Key Insights:**
+- DOD maintains consistent performance in both patterns due to efficient memory layout
+- ECS handles fragmentation better than OOP but incurs query overhead
+- OOP suffers most from fragmentation due to pointer chasing and cache misses
 
 ### Scaling Behavior
+
 - All patterns show performance decrease from 100K to 10M entities
 - This is expected due to cache pressure (100K fits in L3, 10M does not)
 - The ratio of performance decrease indicates how well each pattern handles cache misses

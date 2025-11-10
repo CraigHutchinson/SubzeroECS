@@ -52,56 +52,166 @@ inline void updatePositions(EntityData& data, float deltaTime) {
 } // namespace DOD_Coherent
 
 // ============================================================================
-// DOD Fragmented - Array of Structures (AoS) with padding
+// DOD Fragmented - Array of SoA structures (one per entity type)
 // ============================================================================
 namespace DOD_Fragmented {
 
-// Fragmented AoS with padding to reduce cache efficiency
-struct Entity {
-    float x, y;
-    float vx, vy;
-    // Extra data and padding to reduce cache efficiency
-    float health;
-    float rotation;
-    float scale;
-    char padding[48]; // Force entities to not fit nicely in cache lines
+// Small entity SoA - just position and velocity
+struct SmallEntities {
+    std::vector<float> x, y;
+    std::vector<float> vx, vy;
+
+    void reserve(size_t count) {
+        x.reserve(count);
+        y.reserve(count);
+        vx.reserve(count);
+        vy.reserve(count);
+    }
+
+    void add(float px, float py, float pvx, float pvy) {
+        x.push_back(px);
+        y.push_back(py);
+        vx.push_back(pvx);
+        vy.push_back(pvy);
+    }
+
+    size_t size() const { return x.size(); }
+
+    void updateAll(float deltaTime) {
+        for (size_t i = 0; i < x.size(); ++i) {
+            Physics::updatePosition(x[i], y[i], vx[i], vy[i], deltaTime);
+        }
+    }
+};
+
+// Medium entity SoA - adds health, rotation, scale
+struct MediumEntities {
+    std::vector<float> x, y;
+    std::vector<float> vx, vy;
+    std::vector<float> health;
+    std::vector<float> rotation;
+    std::vector<float> scale;
+
+    void reserve(size_t count) {
+        x.reserve(count);
+        y.reserve(count);
+        vx.reserve(count);
+        vy.reserve(count);
+        health.reserve(count);
+        rotation.reserve(count);
+        scale.reserve(count);
+    }
+
+    void add(float px, float py, float pvx, float pvy) {
+        x.push_back(px);
+        y.push_back(py);
+        vx.push_back(pvx);
+        vy.push_back(pvy);
+        health.push_back(100.0f);
+        rotation.push_back(0.0f);
+        scale.push_back(1.0f);
+    }
+
+    size_t size() const { return x.size(); }
+
+    void updateAll(float deltaTime) {
+        for (size_t i = 0; i < x.size(); ++i) {
+            Physics::updatePosition(x[i], y[i], vx[i], vy[i], deltaTime);
+            Physics::updateRotationHealth(rotation[i], health[i], deltaTime);
+        }
+    }
+};
+
+// Large entity SoA - adds color, team, flags
+struct LargeEntities {
+    std::vector<float> x, y;
+    std::vector<float> vx, vy;
+    std::vector<float> health;
+    std::vector<float> rotation;
+    std::vector<float> scale;
+    std::vector<float> color_r, color_g, color_b, color_a;
+    std::vector<int> team;
+    std::vector<int> flags;
+
+    void reserve(size_t count) {
+        x.reserve(count);
+        y.reserve(count);
+        vx.reserve(count);
+        vy.reserve(count);
+        health.reserve(count);
+        rotation.reserve(count);
+        scale.reserve(count);
+        color_r.reserve(count);
+        color_g.reserve(count);
+        color_b.reserve(count);
+        color_a.reserve(count);
+        team.reserve(count);
+        flags.reserve(count);
+    }
+
+    void add(float px, float py, float pvx, float pvy) {
+        x.push_back(px);
+        y.push_back(py);
+        vx.push_back(pvx);
+        vy.push_back(pvy);
+        health.push_back(100.0f);
+        rotation.push_back(0.0f);
+        scale.push_back(1.0f);
+        color_r.push_back(1.0f);
+        color_g.push_back(1.0f);
+        color_b.push_back(1.0f);
+        color_a.push_back(1.0f);
+        team.push_back(0);
+        flags.push_back(0);
+    }
+
+    size_t size() const { return x.size(); }
+
+    void updateAll(float deltaTime) {
+        for (size_t i = 0; i < x.size(); ++i) {
+            Physics::updatePosition(x[i], y[i], vx[i], vy[i], deltaTime);
+            Physics::updateRotationHealth(rotation[i], health[i], deltaTime);
+            Physics::pulseScale(scale[i], deltaTime);
+        }
+    }
 };
 
 class EntityData {
 public:
     void reserve(size_t count) {
-        entities_.reserve(count);
+        // Estimate roughly even distribution across types
+        size_t per_type = count / 3;
+        small_.reserve(per_type);
+        medium_.reserve(per_type);
+        large_.reserve(per_type);
     }
 
-    void addEntity(float x, float y, float vx, float vy) {
-        entities_.push_back(Entity{
-            x, y, vx, vy,
-            100.0f,  // health
-            0.0f,    // rotation
-            1.0f     // scale
-        });
-    }
-
-    size_t count() const {
-        return entities_.size();
-    }
-
-    // Update using AoS - loads entire struct even though
-    // we only need position and velocity
-    void updateAll(float deltaTime) {
-        for (auto& entity : entities_) {
-            Physics::updatePosition(
-                entity.x,
-                entity.y,
-                entity.vx,
-                entity.vy,
-                deltaTime
-            );
+    void addEntity(float x, float y, float vx, float vy, int entityType = 0) {
+        int type = entityType % 3;
+        
+        if (type == 0) {
+            small_.add(x, y, vx, vy);
+        } else if (type == 1) {
+            medium_.add(x, y, vx, vy);
+        } else {
+            large_.add(x, y, vx, vy);
         }
     }
 
+    size_t count() const {
+        return small_.size() + medium_.size() + large_.size();
+    }
+
+    void updateAll(float deltaTime) {
+        small_.updateAll(deltaTime);
+        medium_.updateAll(deltaTime);
+        large_.updateAll(deltaTime);
+    }
+
 private:
-    std::vector<Entity> entities_;
+    SmallEntities small_;
+    MediumEntities medium_;
+    LargeEntities large_;
 };
 
 } // namespace DOD_Fragmented

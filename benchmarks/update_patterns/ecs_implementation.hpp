@@ -68,7 +68,7 @@ private:
 } // namespace ECS_Coherent
 
 // ============================================================================
-// ECS Fragmented - Mixed entity compositions
+// ECS Fragmented - Mixed entity compositions matching OOP/DOD types
 // ============================================================================
 namespace ECS_Fragmented {
 
@@ -83,14 +83,36 @@ struct Velocity {
     float dy = 0.0f;
 };
 
-// Extra component to create mixed entity compositions (fragmentation)
-struct ExtraData {
-    float health = 100.0f;
-    float rotation = 0.0f;
-    char padding[56]; // Make it larger to create some fragmentation
+// Medium entity components
+struct Health {
+    float value = 100.0f;
 };
 
-// Physics update system
+struct Rotation {
+    float angle = 0.0f;
+};
+
+struct Scale {
+    float value = 1.0f;
+};
+
+// Large entity components
+struct Color {
+    float r = 1.0f;
+    float g = 1.0f;
+    float b = 1.0f;
+    float a = 1.0f;
+};
+
+struct Team {
+    int id = 0;
+};
+
+struct Flags {
+    int value = 0;
+};
+
+// Physics update system - processes all entities with Position and Velocity
 class PhysicsSystem : public SubzeroECS::System<PhysicsSystem, Position, Velocity> {
 public:
     float deltaTime = 0.0f;
@@ -106,27 +128,71 @@ public:
     }
 };
 
+// Rotation and Health update system - processes Medium and Large entities
+class RotationHealthSystem : public SubzeroECS::System<RotationHealthSystem, Health, Rotation> {
+public:
+    float deltaTime = 0.0f;
+
+    RotationHealthSystem(SubzeroECS::World& world)
+        : SubzeroECS::System<RotationHealthSystem, Health, Rotation>(world) {}
+
+    void processEntity(Iterator iEntity) {
+        Health& health = iEntity.get<Health>();
+        Rotation& rotation = iEntity.get<Rotation>();
+
+        Physics::updateRotationHealth(rotation.angle, health.value, deltaTime);
+    }
+};
+
+// Large entity extra processing system - only processes entities with Scale (and Color marker)
+class ScalePulseSystem : public SubzeroECS::System<ScalePulseSystem, Scale, Color> {
+public:
+    float deltaTime = 0.0f;
+
+    ScalePulseSystem(SubzeroECS::World& world)
+        : SubzeroECS::System<ScalePulseSystem, Scale, Color>(world) {}
+
+    void processEntity(Iterator iEntity) {
+        Scale& scale = iEntity.get<Scale>();
+
+        Physics::pulseScale(scale.value, deltaTime);
+    }
+};
+
 // World wrapper for easier management
 class EntityWorld {
 public:
     EntityWorld() 
         : collections_(world_)
-        , physicsSystem_(world_) 
+        , physicsSystem_(world_)
+        , rotationHealthSystem_(world_)
+        , scalePulseSystem_(world_)
     {}
 
     void addEntity(float x, float y, float vx, float vy, int entityType = 0) {
-        // Mix entities - some have ExtraData, some don't
-        // This creates fragmentation in entity composition
-        if (entityType % 3 == 0) {
-            world_.create(Position{x, y}, Velocity{vx, vy}, ExtraData{});
-        } else {
+        int type = entityType % 3;
+        
+        if (type == 0) {
+            // Small entity - just Position and Velocity
             world_.create(Position{x, y}, Velocity{vx, vy});
+        } else if (type == 1) {
+            // Medium entity - adds Health, Rotation, Scale
+            world_.create(Position{x, y}, Velocity{vx, vy}, Health{}, Rotation{}, Scale{});
+        } else {
+            // Large entity - adds Color, Team, Flags
+            world_.create(Position{x, y}, Velocity{vx, vy}, Health{}, Rotation{}, Scale{}, Color{}, Team{}, Flags{});
         }
     }
 
     void updateAll(float deltaTime) {
         physicsSystem_.deltaTime = deltaTime;
         physicsSystem_.update();
+        
+        rotationHealthSystem_.deltaTime = deltaTime;
+        rotationHealthSystem_.update();
+        
+        scalePulseSystem_.deltaTime = deltaTime;
+        scalePulseSystem_.update();
     }
 
     size_t count() const {
@@ -137,8 +203,10 @@ public:
 
 private:
     SubzeroECS::World world_;
-    SubzeroECS::Collection<Position, Velocity, ExtraData> collections_;
+    SubzeroECS::Collection<Position, Velocity, Health, Rotation, Scale, Color, Team, Flags> collections_;
     PhysicsSystem physicsSystem_;
+    RotationHealthSystem rotationHealthSystem_;
+    ScalePulseSystem scalePulseSystem_;
 };
 
 } // namespace ECS_Fragmented

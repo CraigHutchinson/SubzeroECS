@@ -99,8 +99,7 @@ public:
 
     void update(float deltaTime) override {
         Physics::updatePosition(x_, y_, vx_, vy_, deltaTime);
-        rotation_ += 0.1f * deltaTime;
-        health_ -= 0.01f * deltaTime;
+        Physics::updateRotationHealth(rotation_, health_, deltaTime);
     }
 
     float getX() const override { return x_; }
@@ -127,8 +126,8 @@ public:
 
     void update(float deltaTime) override {
         Physics::updatePosition(x_, y_, vx_, vy_, deltaTime);
-        rotation_ += 0.1f * deltaTime;
-        health_ -= 0.01f * deltaTime;
+        Physics::updateRotationHealth(rotation_, health_, deltaTime);
+        Physics::pulseScale(scale_, deltaTime);
     }
 
     float getX() const override { return x_; }
