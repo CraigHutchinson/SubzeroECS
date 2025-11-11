@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <limits>
 #include <compare>
+#include <stdexcept>
 
 namespace SubzeroECS
 {
