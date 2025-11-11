@@ -21,15 +21,15 @@ namespace SubzeroECS
 	{
 		/** Optimized 2-way intersection using classic merge algorithm.
 		 * 
-		 * When either iterator reaches end, the first iterator is set to end.
-		 * The first iterator serves as the canonical indicator of completion.
+		 * Advances iterators to find the next intersection point.
+		 * Does NOT modify iterators on failure - caller should handle end assignment.
 		 * 
 		 * @tparam Iterator Type of iterator (must support ++, *, <, ==, and comparison to end)
-		 * @param it1 First iterator (modified in place)
-		 * @param it2 Second iterator (modified in place)
+		 * @param it1 First iterator (modified in place on success)
+		 * @param it2 Second iterator (modified in place on success)
 		 * @param end1 End iterator for first collection
 		 * @param end2 End iterator for second collection
-		 * @return true if intersection found, false if reached end
+		 * @return true if intersection found, false if any iterator reached end
 		 */
 		template<typename Iterator>
 		bool intersect2(Iterator& it1, Iterator& it2, Iterator end1, Iterator end2)
@@ -52,7 +52,6 @@ namespace SubzeroECS
 				{
 					if (++it2 == end2)
 					{
-						it1 = end1;
 						return false; // Reached end
 					}
 				}
@@ -61,28 +60,22 @@ namespace SubzeroECS
 
 		/** Check if two iterators are at the same position for 2-way begin.
 		 * 
-		 * When either iterator is at end, the first iterator is set to end.
-		 * The first iterator serves as the canonical indicator of completion.
+		 * Checks if already at an intersection or finds the first one.
+		 * Does NOT modify iterators on failure - caller should handle end assignment.
 		 * 
 		 * @tparam Iterator Type of iterator
 		 * @param it1 First iterator
 		 * @param it2 Second iterator
 		 * @param end1 End iterator for first collection
 		 * @param end2 End iterator for second collection
-		 * @return true if at intersection or first at end
+		 * @return true if at intersection, false if any iterator at end
 		 */
 		template<typename Iterator>
 		bool begin2(Iterator& it1, Iterator& it2, Iterator end1, Iterator end2)
 		{
-			if (it1 == end1)
+			if (it1 == end1 || it2 == end2)
 			{
-				return true; // At end
-			}
-
-			if (it2 == end2)
-			{
-				it1 = end1;
-				return true; // At end
+				return false; // At end
 			}
 
 			// Check if already at intersection
@@ -95,28 +88,22 @@ namespace SubzeroECS
 
 		/** Increment both iterators and find next intersection for 2-way.
 		 * 
-		 * When either iterator reaches end after incrementing, the first iterator is set to end.
-		 * The first iterator serves as the canonical indicator of completion.
+		 * Advances both iterators past current position and finds next intersection.
+		 * Does NOT modify iterators on failure - caller should handle end assignment.
 		 * 
 		 * @tparam Iterator Type of iterator
 		 * @param it1 First iterator (will be incremented)
 		 * @param it2 Second iterator (will be incremented)
 		 * @param end1 End iterator for first collection
 		 * @param end2 End iterator for second collection
-		 * @return true if next intersection found, false if reached end
+		 * @return true if next intersection found, false if any iterator reached end
 		 */
 		template<typename Iterator>
 		bool increment2(Iterator& it1, Iterator& it2, Iterator end1, Iterator end2)
 		{
 			// Advance past current position
-			if (++it1 == end1)
+			if (++it1 == end1 || ++it2 == end2)
 			{
-				return false; // Reached end
-			}
-
-			if (++it2 == end2)
-			{
-				it1 = end1;
 				return false; // Reached end
 			}
 
@@ -137,14 +124,13 @@ namespace SubzeroECS
 		 *    - Binary search for large gaps (galloping)
 		 * 3. Repeat until all iterators converge or any reaches end
 		 * 
-		 * When any iterator reaches end, the first iterator is set to end.
-		 * The first iterator serves as the canonical indicator of completion.
+		 * Does NOT modify iterators on failure - caller should handle end assignment.
 		 * 
 		 * Complexity: O(n log k) where n is size of smallest set, k is max skip distance
 		 * 
 		 * @tparam Is Index sequence for parameter pack expansion
 		 * @tparam Iterators Tuple of iterator types
-		 * @param iterators Tuple of iterators (modified in place)
+		 * @param iterators Tuple of iterators (modified in place on success)
 		 * @param endIterators Tuple of end iterators (same type as iterators)
 		 * @return true if intersection found, false if any iterator reached end
 		 */
@@ -210,8 +196,6 @@ namespace SubzeroECS
 				if (anyAtEnd)
 				{
 					// At least one iterator reached end - no more intersections
-					// Set first iterator to end (canonical indicator)
-					std::get<0>(iterators) = std::get<0>(endIterators);
 					return false;
 				}
 				
@@ -227,14 +211,14 @@ namespace SubzeroECS
 
 		/** Check if all iterators are already at intersection for N-way begin.
 		 * 
-		 * When any iterator is at end, the first iterator is set to end.
-		 * The first iterator serves as the canonical indicator of completion.
+		 * Checks if already at an intersection or finds the first one.
+		 * Does NOT modify iterators on failure - caller should handle end assignment.
 		 * 
 		 * @tparam Is Index sequence for parameter pack expansion
 		 * @tparam Iterators Tuple of iterator types
-		 * @param iterators Tuple of iterators (modified in place)
+		 * @param iterators Tuple of iterators (modified in place on success)
 		 * @param endIterators Tuple of end iterators (same type as iterators)
-		 * @return true if at intersection or first at end
+		 * @return true if at intersection, false if any iterator at end
 		 */
 		template<std::size_t... Is, typename Iterators>
 		bool beginN(std::index_sequence<Is...> indices, Iterators& iterators, const Iterators& endIterators)
@@ -242,8 +226,7 @@ namespace SubzeroECS
 			// Check if any iterator is already at end
 			if (((std::get<Is>(iterators) == std::get<Is>(endIterators)) || ...))
 			{
-				std::get<0>(iterators) = std::get<0>(endIterators); // Set first to end
-				return true;
+				return false; // At end
 			}
 
 			// Check if all iterators already point to the same EntityId
@@ -262,12 +245,12 @@ namespace SubzeroECS
 
 		/** Increment all iterators and find next intersection for N-way.
 		 * 
-		 * When any iterator reaches end after incrementing, the first iterator is set to end.
-		 * The first iterator serves as the canonical indicator of completion.
+		 * Advances all iterators past current position and finds next intersection.
+		 * Does NOT modify iterators on failure - caller should handle end assignment.
 		 * 
 		 * @tparam Is Index sequence for parameter pack expansion
 		 * @tparam Iterators Tuple of iterator types
-		 * @param iterators Tuple of iterators (modified in place)
+		 * @param iterators Tuple of iterators (modified in place on success)
 		 * @param endIterators Tuple of end iterators (same type as iterators)
 		 * @return true if next intersection found, false if any iterator reached end
 		 */
@@ -278,8 +261,7 @@ namespace SubzeroECS
 			// + Check if any iterator reached end after increment
 			if (((++std::get<Is>(iterators) == std::get<Is>(endIterators)) || ...))
 			{
-				std::get<0>(iterators) = std::get<0>(endIterators); // Set first to end
-				return true; // At end
+				return false; // At end
 			}
 
 			// Check if we're already at an intersection after increment

@@ -175,7 +175,11 @@ namespace SubzeroECS
 				auto end1 = std::get<0>(collections_).end();
 				auto end2 = std::get<1>(collections_).end();
 
-				Intersection::begin2(it1, it2, end1, end2);
+				if (!Intersection::begin2(it1, it2, end1, end2))
+				{
+					// No intersection found - set first iterator to end
+					it1 = end1;
+				}
 				return *this;
 			}
 
@@ -187,7 +191,11 @@ namespace SubzeroECS
 				auto end1 = std::get<0>(collections_).end();
 				auto end2 = std::get<1>(collections_).end();
 
-				Intersection::increment2(it1, it2, end1, end2);
+				if (!Intersection::increment2(it1, it2, end1, end2))
+				{
+					// No intersection found - set first iterator to end
+					it1 = end1;
+				}
 				return *this;
 			}
 
@@ -196,7 +204,11 @@ namespace SubzeroECS
 			Iterator& beginN( std::index_sequence<Is...> indices )
 			{
 				auto endIterators = std::make_tuple(std::get<Is>(collections_).end()...);
-				Intersection::beginN(indices, iterators_, endIterators);
+				if (!Intersection::beginN(indices, iterators_, endIterators))
+				{
+					// No intersection found - set first iterator to end
+					std::get<0>(iterators_) = std::get<0>(endIterators);
+				}
 				return *this;
 			}
 
@@ -205,7 +217,11 @@ namespace SubzeroECS
 			Iterator& incrementN( std::index_sequence<Is...> indices )
 			{
 				auto endIterators = std::make_tuple(std::get<Is>(collections_).end()...);
-				Intersection::incrementN(indices, iterators_, endIterators);
+				if (!Intersection::incrementN(indices, iterators_, endIterators))
+				{
+					// No intersection found - set first iterator to end
+					std::get<0>(iterators_) = std::get<0>(endIterators);
+				}
 				return *this;
 			}
 
