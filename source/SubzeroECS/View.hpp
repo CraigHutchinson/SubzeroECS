@@ -1,10 +1,11 @@
 #pragma once
 
-#include <algorithm> //< std::all_of, std::distance, std::lower_bound
+#include <algorithm> //< std::all_of, std::distance
 #include <array>
 #include <tuple>
 
 #include "Collection.hpp"
+#include "Intersection.hpp"
 
 template <typename T, typename... Ts> struct get_type_index;
 
@@ -164,8 +165,7 @@ namespace SubzeroECS
 					: EntityId::Invalid;
 			}
 
-			/** Optimized helper for 2-way intersection increment
-			*/
+			/** Optimized helper for 2-way intersection - find first intersection */
 			Iterator& begin2()
 			{				
 				auto& it1 = std::get<0>(iterators_);
@@ -173,26 +173,11 @@ namespace SubzeroECS
 				auto end1 = std::get<0>(collections_).end();
 				auto end2 = std::get<1>(collections_).end();
 
-				// Advance past the current position
-				if ( it1 == end1 )
-				{
-					return it2 = end2, *this; // Reached end
-				}
-
-				if ( it2 == end2 )
-				{
-					return it1 = end1, *this; // Reached end
-				}
-
-				//TODO: PERF does this help here? == Optimize for likely case where *it1 and *it2 are close
-				if (*it2 == *it1)
-					return *this; // *it1 and *it2 are equivalent (intersection found)
-
-				return intersect2();
+				Intersection::begin2(it1, it2, end1, end2);
+				return *this;
 			}
 
-			/** Optimized helper for 2-way intersection increment
-			*/
+			/** Optimized helper for 2-way intersection - increment and find next */
 			Iterator& increment2()
 			{				
 				auto& it1 = std::get<0>(iterators_);
@@ -200,198 +185,26 @@ namespace SubzeroECS
 				auto end1 = std::get<0>(collections_).end();
 				auto end2 = std::get<1>(collections_).end();
 
-				// Advance past the current position
-				if ( ++it1 == end1 )
-				{
-					return it2 = end2, *this; // Reached end
-				}
-
-				if ( ++it2 == end2 )
-				{
-					return it1 = end1, *this; // Reached end
-				}
-
-				//TODO: PERF does this help here? == Optimize for likely case where *it1 and *it2 are close
-				if (*it2 == *it1)
-					return *this; // *it1 and *it2 are equivalent (intersection found)
-
-				return intersect2();
+				Intersection::increment2(it1, it2, end1, end2);
+				return *this;
 			}
 
-			/** Optimized helper for 2-way intersection - find intersection point
-			*/
-			Iterator& intersect2()
-			{
-				auto& it1 = std::get<0>(iterators_);
-				auto& it2 = std::get<1>(iterators_);
-				auto end1 = std::get<0>(collections_).end();
-				auto end2 = std::get<1>(collections_).end();
-
-				// Find next intersection point
-				do
-				{
-					if (*it1 < *it2)
-					{
-						if ( ++it1 == end1 )
-						{
-							return it2 = end2, *this; // Reached end
-						}
-					}
-					else
-					//TODO: PERF using == vs !..<
-					if (!(*it2 < *it1)) // *it1 and *it2 are equivalent (intersection found)	
-					{
-						return *this;
-					}
-					else
-					if ( ++it2 == end2 )
-					{
-						return it1 = end1, *this; // Reached end
-					}
-				} while (true);
-			}
-
-			/** Helper for N-way intersection (N >= 3)
-			 * Uses adaptive galloping algorithm based on:
-			 * - https://www.vldb.org/pvldb/vol8/p293-inoue.pdf (VLDB 2015, Inoue et al.)
-			 * - https://ceur-ws.org/Vol-2840/short2.pdf
-			 * 
-			 * Strategy: "Max-Skip" approach
-			 * 1. Find maximum EntityId among all current iterator positions
-			 * 2. Advance lagging iterators using binary search (for large gaps)
-			 * 3. Check if all iterators now point to same EntityId (intersection found)
-			 * 4. Repeat until intersection found or any iterator reaches end
-			 * 
-			 * Complexity: O(n log k) where n is size of smallest set, k is max skip distance
-			 */
+			/** Helper for N-way intersection - find first intersection */
 			template<std::size_t... Is>
-			Iterator& intersectN( std::index_sequence<Is...> )
+			Iterator& beginN( std::index_sequence<Is...> indices )
 			{
-				// Threshold for switching from linear scan to binary search (galloping)
-				// Based on VLDB paper: small gaps benefit from linear scan (better cache locality)
-				//TODO: Should this size be defined by cache line read size?
-				constexpr std::size_t GallopingThreshold = 32;
-				
-				// Main galloping intersection loop
-				while (true)
-				{
-					// Step 1: Find the maximum EntityId among all current positions
-					EntityId maxId = *std::get<0>(iterators_);  // Start with first iterator's value
-					((void)(Is == 0 ? void() : (void)(maxId = std::max(maxId, *std::get<Is>(iterators_)))), ...);
-					
-					// Step 2: Advance all iterators that are behind maxId
-					bool allAtMax = true;
-					bool anyAtEnd = false;
-					
-					// Process each iterator
-					([&]()
-					{
-						auto& it = std::get<Is>(iterators_);
-						auto end = std::get<Is>(collections_).end();
-						
-						if (*it < maxId)
-						{
-							allAtMax = false;
-							
-							// Adaptive: use linear scan for small gaps, binary search for large gaps
-							std::size_t linearCount = 0;
-							
-							// Try linear scan first up to threshold
-							while (linearCount < GallopingThreshold && it != end && *it < maxId)
-							{
-								++it;
-								++linearCount;
-							}
-							
-							if (it != end )
-							{
-								if( *it < maxId)
-								{
-									// Gap is large - use binary search (galloping) from current position
-									it = std::lower_bound(it, end, maxId);
-									if ( it == end )
-									{
-										anyAtEnd = true;
-									}
-								}
-							}
-							else
-							{
-								anyAtEnd = true;
-							}
-						}
-					}(), ...);
-					
-					// Step 3: Check termination conditions
-					if (anyAtEnd)
-					{
-						// At least one iterator reached end - no more intersections
-						// Set all to end for consistency
-						((std::get<Is>(iterators_) = std::get<Is>(collections_).end()), ...);
-						return *this;
-					}
-					
-					if (allAtMax)
-					{
-						// All iterators point to maxId - intersection found!
-						return *this;
-					}
-					
-					// Continue loop - new max will be computed in next iteration
-				}
+				auto endIterators = std::make_tuple(std::get<Is>(collections_).end()...);
+				Intersection::beginN(indices, iterators_, endIterators);
+				return *this;
 			}
 
+			/** Helper for N-way intersection - increment and find next */
 			template<std::size_t... Is>
-			Iterator& beginN( std::index_sequence<Is...> )
+			Iterator& incrementN( std::index_sequence<Is...> indices )
 			{
-				// Check if any iterator is already at end
-				if (((std::get<Is>(iterators_) == std::get<Is>(collections_).end()) || ...))
-				{
-					// Set all to end
-					((std::get<Is>(iterators_) = std::get<Is>(collections_).end()), ...);
-					return *this;
-				}
-
-				// Check if all iterators already point to the same EntityId
-				EntityId firstId = *std::get<0>(iterators_);
-				bool allMatch = ((Is == 0 || *std::get<Is>(iterators_) == firstId) && ...);
-				
-				if (allMatch)
-				{
-					// Already at an intersection
-					return *this;
-				}
-
-				// Need to find first intersection
-				return intersectN( std::index_sequence<Is...>{} );
-			}
-
-			template<std::size_t... Is>
-			Iterator& incrementN( std::index_sequence<Is...> )
-			{
-				// Advance all iterators by one position
-				((++std::get<Is>(iterators_)), ...);
-				
-				// Check if any iterator reached end after increment
-				if (((std::get<Is>(iterators_) == std::get<Is>(collections_).end()) || ...))
-				{
-					// Set all to end
-					((std::get<Is>(iterators_) = std::get<Is>(collections_).end()), ...);
-					return *this;
-				}
-
-				// Check if we're already at an intersection after increment
-				EntityId firstId = *std::get<0>(iterators_);
-				bool allMatch = ((Is == 0 || *std::get<Is>(iterators_) == firstId) && ...);
-				
-				if (allMatch)
-				{
-					// Lucky! Already at next intersection
-					return *this;
-				}
-
-				// Need to find next intersection
-				return intersectN( std::index_sequence<Is...>{} );
+				auto endIterators = std::make_tuple(std::get<Is>(collections_).end()...);
+				Intersection::incrementN(indices, iterators_, endIterators);
+				return *this;
 			}
 
 		private:
