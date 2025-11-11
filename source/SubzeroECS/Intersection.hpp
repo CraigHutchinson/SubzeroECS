@@ -24,16 +24,20 @@ namespace SubzeroECS
 		 * Advances iterators to find the next intersection point.
 		 * Does NOT modify iterators on failure - caller should handle end assignment.
 		 * 
-		 * @tparam Iterator Type of iterator (must support ++, *, <, ==, and comparison to end)
-		 * @param it1 First iterator (modified in place on success)
-		 * @param it2 Second iterator (modified in place on success)
-		 * @param end1 End iterator for first collection
-		 * @param end2 End iterator for second collection
+		 * @tparam Is Index sequence for parameter pack expansion
+		 * @tparam Iterators Tuple of iterator types
+		 * @param iterators Tuple of iterators (modified in place on success)
+		 * @param endIterators Tuple of end iterators (same type as iterators)
 		 * @return true if intersection found, false if any iterator reached end
 		 */
-		template<typename Iterator>
-		bool intersect2(Iterator& it1, Iterator& it2, Iterator end1, Iterator end2)
+		template<std::size_t... Is, typename Iterators>
+		bool intersect2(std::index_sequence<Is...>, Iterators& iterators, const Iterators& endIterators)
 		{
+			auto& it1 = std::get<0>(iterators);
+			auto& it2 = std::get<1>(iterators);
+			auto end1 = std::get<0>(endIterators);
+			auto end2 = std::get<1>(endIterators);
+
 			// Find next intersection point
 			while (true)
 			{
@@ -63,16 +67,20 @@ namespace SubzeroECS
 		 * Checks if already at an intersection or finds the first one.
 		 * Does NOT modify iterators on failure - caller should handle end assignment.
 		 * 
-		 * @tparam Iterator Type of iterator
-		 * @param it1 First iterator
-		 * @param it2 Second iterator
-		 * @param end1 End iterator for first collection
-		 * @param end2 End iterator for second collection
+		 * @tparam Is Index sequence for parameter pack expansion
+		 * @tparam Iterators Tuple of iterator types
+		 * @param iterators Tuple of iterators (modified in place on success)
+		 * @param endIterators Tuple of end iterators (same type as iterators)
 		 * @return true if at intersection, false if any iterator at end
 		 */
-		template<typename Iterator>
-		bool begin2(Iterator& it1, Iterator& it2, Iterator end1, Iterator end2)
+		template<std::size_t... Is, typename Iterators>
+		bool begin2(std::index_sequence<Is...> indices, Iterators& iterators, const Iterators& endIterators)
 		{
+			auto& it1 = std::get<0>(iterators);
+			auto& it2 = std::get<1>(iterators);
+			auto end1 = std::get<0>(endIterators);
+			auto end2 = std::get<1>(endIterators);
+
 			if (it1 == end1 || it2 == end2)
 			{
 				return false; // At end
@@ -83,7 +91,7 @@ namespace SubzeroECS
 				return true;
 
 			// Find first intersection
-			return intersect2(it1, it2, end1, end2);
+			return intersect2(indices, iterators, endIterators);
 		}
 
 		/** Increment both iterators and find next intersection for 2-way.
@@ -91,16 +99,20 @@ namespace SubzeroECS
 		 * Advances both iterators past current position and finds next intersection.
 		 * Does NOT modify iterators on failure - caller should handle end assignment.
 		 * 
-		 * @tparam Iterator Type of iterator
-		 * @param it1 First iterator (will be incremented)
-		 * @param it2 Second iterator (will be incremented)
-		 * @param end1 End iterator for first collection
-		 * @param end2 End iterator for second collection
+		 * @tparam Is Index sequence for parameter pack expansion
+		 * @tparam Iterators Tuple of iterator types
+		 * @param iterators Tuple of iterators (modified in place on success)
+		 * @param endIterators Tuple of end iterators (same type as iterators)
 		 * @return true if next intersection found, false if any iterator reached end
 		 */
-		template<typename Iterator>
-		bool increment2(Iterator& it1, Iterator& it2, Iterator end1, Iterator end2)
+		template<std::size_t... Is, typename Iterators>
+		bool increment2(std::index_sequence<Is...> indices, Iterators& iterators, const Iterators& endIterators)
 		{
+			auto& it1 = std::get<0>(iterators);
+			auto& it2 = std::get<1>(iterators);
+			auto end1 = std::get<0>(endIterators);
+			auto end2 = std::get<1>(endIterators);
+
 			// Advance past current position
 			if (++it1 == end1 || ++it2 == end2)
 			{
@@ -112,7 +124,7 @@ namespace SubzeroECS
 				return true;
 
 			// Find next intersection
-			return intersect2(it1, it2, end1, end2);
+			return intersect2(indices, iterators, endIterators);
 		}
 
 		/** N-way intersection using adaptive galloping algorithm.

@@ -170,15 +170,15 @@ namespace SubzeroECS
 			/** Optimized helper for 2-way intersection - find first intersection */
 			Iterator& begin2()
 			{				
-				auto& it1 = std::get<0>(iterators_);
-				auto& it2 = std::get<1>(iterators_);
-				auto end1 = std::get<0>(collections_).end();
-				auto end2 = std::get<1>(collections_).end();
+				auto endIterators = std::make_tuple(
+					std::get<0>(collections_).end(),
+					std::get<1>(collections_).end()
+				);
 
-				if (!Intersection::begin2(it1, it2, end1, end2))
+				if (!Intersection::begin2(std::make_index_sequence<2>{}, iterators_, endIterators))
 				{
 					// No intersection found - set first iterator to end
-					it1 = end1;
+					std::get<0>(iterators_) = std::get<0>(endIterators);
 				}
 				return *this;
 			}
@@ -186,15 +186,15 @@ namespace SubzeroECS
 			/** Optimized helper for 2-way intersection - increment and find next */
 			Iterator& increment2()
 			{				
-				auto& it1 = std::get<0>(iterators_);
-				auto& it2 = std::get<1>(iterators_);
-				auto end1 = std::get<0>(collections_).end();
-				auto end2 = std::get<1>(collections_).end();
+				auto endIterators = std::make_tuple(
+					std::get<0>(collections_).end(),
+					std::get<1>(collections_).end()
+				);
 
-				if (!Intersection::increment2(it1, it2, end1, end2))
+				if (!Intersection::increment2(std::make_index_sequence<2>{}, iterators_, endIterators))
 				{
 					// No intersection found - set first iterator to end
-					it1 = end1;
+					std::get<0>(iterators_) = std::get<0>(endIterators);
 				}
 				return *this;
 			}
