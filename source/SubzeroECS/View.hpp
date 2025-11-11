@@ -156,6 +156,54 @@ namespace SubzeroECS
 				}
 			}
 
+			/** Optimized helper for 2-way intersection */
+			Iterator& advance2()
+			{
+				// Two-way intersection using classic std::set_intersection algorithm
+				auto& it1 = std::get<0>(iterators_);
+				auto& it2 = std::get<1>(iterators_);
+				auto end1 = std::get<0>(collections_).end();
+				auto end2 = std::get<1>(collections_).end();
+				
+				// Advance past the current position
+				if ( ++it1 == end1 )
+				{
+					return it2 = end2, *this; // Reached end
+				}
+
+				if ( ++it2 == end2 )
+				{
+					return it1 = end1, *this; // Reached end
+				}
+
+				//TODO: PERF does this help here? == Optimize for likely case where *it1 and *it2 are close
+				if (!(*it2 < *it1))
+					return *this; // *it1 and *it2 are equivalent (intersection found)
+
+				// Find next intersection point
+				do
+				{
+					if (*it1 < *it2)
+					{
+						if ( ++it1 == end1 )
+						{
+							return it2 = end2, *this; // Reached end
+						}
+					}
+					else
+					//TODO: PERF using == vs !..<
+					if (!(*it2 < *it1)) // *it1 and *it2 are equivalent (intersection found)	
+					{
+						return *this;
+					}
+					else
+					if ( ++it2 == end2 )
+					{
+						return it1 = end1, *this; // Reached end
+					}
+				} while (true);
+			}
+
 			/** Helper for N-way intersection (N >= 3)
 			@todo Performance optimizations: 
 			- https://www.vldb.org/pvldb/vol8/p293-inoue.pdf
@@ -164,6 +212,11 @@ namespace SubzeroECS
 			template<std::size_t... Is>
 			Iterator& advanceN( std::index_sequence<Is...> )
 			{
+				if constexpr (sizeof...(Is) == 2)
+				{
+					return advance2();
+				}
+
 				// 2-or-more-way intersection
 				auto its = std::make_tuple( std::ref(std::get<Is>(iterators_))... );
 				auto iends = std::make_tuple( std::get<Is>(collections_).end()... );
@@ -237,36 +290,11 @@ namespace SubzeroECS
 					// Single component - just advance the iterator
 					++std::get<0>(iterators_);
 				}
-#if 1 // TODO: Profile vs the generic option! 
 				else if constexpr (sizeof...(Components) == 2)
 				{
-					// Two-way intersection using classic std::set_intersection algorithm
-					auto& it1 = std::get<0>(iterators_);
-					auto& it2 = std::get<1>(iterators_);
-					auto end1 = std::get<0>(collections_).end();
-					auto end2 = std::get<1>(collections_).end();
-					
-					// Advance past the current position
-					++it1;
-					
-					// Find next intersection point
-					while (it1 != end1 && it2 != end2)
-					{
-						if (*it1 < *it2)
-							++it1;
-						else
-						{
-							if (!(*it2 < *it1))
-								return *this; // *it1 and *it2 are equivalent (intersection found)							
-							++it2;
-						}
-					}
-					
-					// No more intersections, set both to end
-					it1 = end1;
-					it2 = end2;
-				}	
-#endif
+					// Optimized 2-way intersection
+					advance2();
+				}
 				else
 				{
 					advanceN( std::make_index_sequence<sizeof...(Components)>{} );
