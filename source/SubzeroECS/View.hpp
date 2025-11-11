@@ -24,6 +24,9 @@ struct get_type_index<T>
 template<typename T>
 using Bare = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
+//TODO: Decide on optimization strategies
+#define SUBZEROECS_VIEW_OPTIM2 1
+
 namespace SubzeroECS
 {
 	/** Creates a union view for ECS-entities with the selected components 
@@ -77,10 +80,12 @@ namespace SubzeroECS
 				{
 					// Single component - already at first element or end
 				}
+#if SUBZEROECS_VIEW_OPTIM2
 				else if constexpr (sizeof...(Components) == 2)
 				{
 					begin2();
 				}
+#endif
 				else
 				{
 					beginN( std::make_index_sequence<sizeof...(Components)>{} );
@@ -114,10 +119,12 @@ namespace SubzeroECS
 					// Single component - just advance the iterator
 					++std::get<0>(iterators_);
 				}
+#if SUBZEROECS_VIEW_OPTIM2
 				else if constexpr (sizeof...(Components) == 2)
 				{
 					increment2();// Optimized 2-way intersection
 				}
+#endif
 				else
 				{
 					incrementN( std::make_index_sequence<sizeof...(Components)>{} );
@@ -260,6 +267,11 @@ namespace SubzeroECS
 			template<std::size_t... Is>
 			Iterator& intersectN( std::index_sequence<Is...> )
 			{
+				// Threshold for switching from linear scan to binary search (galloping)
+				// Based on VLDB paper: small gaps benefit from linear scan (better cache locality)
+				//TODO: Should this size be defined by cache line read size?
+				constexpr std::size_t GallopingThreshold = 32;
+				
 				// Main galloping intersection loop
 				while (true)
 				{
@@ -281,11 +293,29 @@ namespace SubzeroECS
 						{
 							allAtMax = false;
 							
-							// Use binary search (galloping) to advance to maxId or beyond
-							// std::lower_bound finds first element >= maxId
-							it = std::lower_bound(it, end, maxId);
+							// Adaptive: use linear scan for small gaps, binary search for large gaps
+							std::size_t linearCount = 0;
 							
-							if (it == end)
+							// Try linear scan first up to threshold
+							while (linearCount < GallopingThreshold && it != end && *it < maxId)
+							{
+								++it;
+								++linearCount;
+							}
+							
+							if (it != end )
+							{
+								if( *it < maxId)
+								{
+									// Gap is large - use binary search (galloping) from current position
+									it = std::lower_bound(it, end, maxId);
+									if ( it == end )
+									{
+										anyAtEnd = true;
+									}
+								}
+							}
+							else
 							{
 								anyAtEnd = true;
 							}
