@@ -46,7 +46,10 @@ public:
 
     void update(float deltaTime) override {
         Physics::updatePosition(x_, y_, vx_, vy_, deltaTime);
+        
+#if 0 //TODO: This is a separate benchmark where we run more full on testing - UpdatePositions only for now
         Physics::updateRotationHealth(rotation_, health_, deltaTime);
+#endif
     }
 
     float getX() const override { return x_; }
@@ -73,8 +76,11 @@ public:
 
     void update(float deltaTime) override {
         Physics::updatePosition(x_, y_, vx_, vy_, deltaTime);
+        
+#if 0 //TODO: This is a separate benchmark where we run more full on testing - UpdatePositions only for now
         Physics::updateRotationHealth(rotation_, health_, deltaTime);
         Physics::pulseScale(scale_, color_[0], color_[1], color_[2], deltaTime);
+#endif
     }
 
     float getX() const override { return x_; }

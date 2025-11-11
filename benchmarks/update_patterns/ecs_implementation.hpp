@@ -128,11 +128,13 @@ public:
         physicsSystem_.deltaTime = deltaTime;
         physicsSystem_.update();
         
+#if 0 //TODO: This is a separate benchmark where we run more full on testing - UpdatePositions only for now
         rotationHealthSystem_.deltaTime = deltaTime;
         rotationHealthSystem_.update();
         
         scalePulseSystem_.deltaTime = deltaTime;
         scalePulseSystem_.update();
+#endif
     }
 
     size_t count() const {

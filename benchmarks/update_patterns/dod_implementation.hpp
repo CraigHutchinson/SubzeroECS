@@ -70,9 +70,11 @@ struct MediumEntities {
         for (size_t i = 0; i < x.size(); ++i) {
             Physics::updatePosition(x[i], y[i], vx[i], vy[i], deltaTime);
         }
+#if 0 //TODO: This is a separate benchmark where we run more full on testing - UpdatePositions only for now
         for (size_t i = 0; i < x.size(); ++i) {
             Physics::updateRotationHealth(rotation[i], health[i], deltaTime);
         }
+#endif
     }
 };
 
@@ -125,12 +127,15 @@ struct LargeEntities {
         for (size_t i = 0; i < x.size(); ++i) {
             Physics::updatePosition(x[i], y[i], vx[i], vy[i], deltaTime);
         }
+
+#if 0 //TODO: This is a separate benchmark where we run more full on testing - UpdatePositions only for now
         for (size_t i = 0; i < x.size(); ++i) {
             Physics::updateRotationHealth(rotation[i], health[i], deltaTime);
         }
         for (size_t i = 0; i < x.size(); ++i) {
             Physics::pulseScale(scale[i], color_r[i], color_g[i], color_b[i], deltaTime);
         }
+#endif
     }
 };
 
