@@ -72,9 +72,19 @@ namespace SubzeroECS
 			   : collections_( collections)
 				, iterators_( std::move(iterators) )
 			{
-				// Advance to first valid iterator position
-				if ( !isAtValid() )
-					advance();
+				// Find first valid intersection
+				if constexpr (sizeof...(Components) == 1)
+				{
+					// Single component - already at first element or end
+				}
+				else if constexpr (sizeof...(Components) == 2)
+				{
+					begin2();
+				}
+				else
+				{
+					beginN( std::make_index_sequence<sizeof...(Components)>{} );
+				}
 			}
 
 			template< typename Component>
@@ -96,8 +106,23 @@ namespace SubzeroECS
 
 			Iterator& operator++()
 			{
-				// Advance to next valid iterator position
-				return advance();
+				// Incrementing at end is an error
+				assert(std::get<0>(iterators_) != std::get<0>(collections_).end());
+
+				if constexpr (sizeof...(Components) == 1)
+				{
+					// Single component - just advance the iterator
+					++std::get<0>(iterators_);
+				}
+				else if constexpr (sizeof...(Components) == 2)
+				{
+					increment2();// Optimized 2-way intersection
+				}
+				else
+				{
+					incrementN( std::make_index_sequence<sizeof...(Components)>{} );
+				}
+				return *this;
 			}
 
 			bool operator != ( const Iterator& rhs ) const
@@ -131,40 +156,43 @@ namespace SubzeroECS
 					? *std::get<index>(its)
 					: EntityId::Invalid;
 			}
-			
-			// Check if all iterators point to the same Entity or all point to end
-			bool isAtValid()
-			{
-				if constexpr (sizeof...(Components) == 1)
-				{
-					// Single component - always valid or at end
-					return true;
-				}
-				else
-				{					
-					auto state = makeIterationState( collections_, iterators_ );
-					return std::apply( [](auto&... pairings)
-					{
-						// get all EntityIds from the iterators
-						std::array<EntityId, sizeof...(Components)> iEntityIds = { 
-							(pairings.second == pairings.first.end() ? EntityId::Invalid : *pairings.second)... };
 
-						// If all are equal to first or all are at end then valid
-						return std::all_of(iEntityIds.begin(), iEntityIds.end()
-							, [cmp=iEntityIds[0]](EntityId v) { return v == cmp; });
-					}, state );
-				}
-			}
-
-			/** Optimized helper for 2-way intersection */
-			Iterator& advance2()
-			{
-				// Two-way intersection using classic std::set_intersection algorithm
+			/** Optimized helper for 2-way intersection increment
+			*/
+			Iterator& begin2()
+			{				
 				auto& it1 = std::get<0>(iterators_);
 				auto& it2 = std::get<1>(iterators_);
 				auto end1 = std::get<0>(collections_).end();
 				auto end2 = std::get<1>(collections_).end();
-				
+
+				// Advance past the current position
+				if ( it1 == end1 )
+				{
+					return it2 = end2, *this; // Reached end
+				}
+
+				if ( it2 == end2 )
+				{
+					return it1 = end1, *this; // Reached end
+				}
+
+				//TODO: PERF does this help here? == Optimize for likely case where *it1 and *it2 are close
+				if (*it2 == *it1)
+					return *this; // *it1 and *it2 are equivalent (intersection found)
+
+				return intersect2();
+			}
+
+			/** Optimized helper for 2-way intersection increment
+			*/
+			Iterator& increment2()
+			{				
+				auto& it1 = std::get<0>(iterators_);
+				auto& it2 = std::get<1>(iterators_);
+				auto end1 = std::get<0>(collections_).end();
+				auto end2 = std::get<1>(collections_).end();
+
 				// Advance past the current position
 				if ( ++it1 == end1 )
 				{
@@ -177,8 +205,20 @@ namespace SubzeroECS
 				}
 
 				//TODO: PERF does this help here? == Optimize for likely case where *it1 and *it2 are close
-				if (!(*it2 < *it1))
+				if (*it2 == *it1)
 					return *this; // *it1 and *it2 are equivalent (intersection found)
+
+				return intersect2();
+			}
+
+			/** Optimized helper for 2-way intersection - find intersection point
+			*/
+			Iterator& intersect2()
+			{
+				auto& it1 = std::get<0>(iterators_);
+				auto& it2 = std::get<1>(iterators_);
+				auto end1 = std::get<0>(collections_).end();
+				auto end2 = std::get<1>(collections_).end();
 
 				// Find next intersection point
 				do
@@ -205,102 +245,124 @@ namespace SubzeroECS
 			}
 
 			/** Helper for N-way intersection (N >= 3)
-			@todo Performance optimizations: 
-			- https://www.vldb.org/pvldb/vol8/p293-inoue.pdf
-			- https://ceur-ws.org/Vol-2840/short2.pdf
+			 * Uses adaptive galloping algorithm based on:
+			 * - https://www.vldb.org/pvldb/vol8/p293-inoue.pdf (VLDB 2015, Inoue et al.)
+			 * - https://ceur-ws.org/Vol-2840/short2.pdf
+			 * 
+			 * Strategy: "Max-Skip" approach
+			 * 1. Find maximum EntityId among all current iterator positions
+			 * 2. Advance lagging iterators using binary search (for large gaps)
+			 * 3. Check if all iterators now point to same EntityId (intersection found)
+			 * 4. Repeat until intersection found or any iterator reaches end
+			 * 
+			 * Complexity: O(n log k) where n is size of smallest set, k is max skip distance
 			 */
 			template<std::size_t... Is>
-			Iterator& advanceN( std::index_sequence<Is...> )
+			Iterator& intersectN( std::index_sequence<Is...> )
 			{
-				if constexpr (sizeof...(Is) == 2)
+				// Main galloping intersection loop
+				while (true)
 				{
-					return advance2();
-				}
-
-				// 2-or-more-way intersection
-				auto its = std::make_tuple( std::ref(std::get<Is>(iterators_))... );
-				auto iends = std::make_tuple( std::get<Is>(collections_).end()... );
-
-				auto notAnyAtEnd = [&its, &iends]() {
-					return ((std::get<Is>(its) != std::get<Is>(iends)) && ...);
-				};
-
-				auto setAllAtEnd = [&its, &iends]() {
-					((std::get<Is>(its) = std::get<Is>(iends)), ...);
-				};
-
-				auto idsAllMatch = [&its]() {
-					if constexpr (sizeof...(Is) <= 1)
-						return true;
-					else
+					// Step 1: Find the maximum EntityId among all current positions
+					EntityId maxId = *std::get<0>(iterators_);  // Start with first iterator's value
+					((void)(Is == 0 ? void() : (void)(maxId = std::max(maxId, *std::get<Is>(iterators_)))), ...);
+					
+					// Step 2: Advance all iterators that are behind maxId
+					bool allAtMax = true;
+					bool anyAtEnd = false;
+					
+					// Process each iterator
+					([&]()
 					{
-						EntityId firstId = *std::get<0>(its);
-						return ((Is == 0 || *std::get<Is>(its) == firstId) && ...);
-					}
-				};
-
-				// Update all iterators that are less than max and update max accordingly
-				auto incrementIfLessThanMaxId = [&its, &iends]( EntityId validId ) {
-					EntityId maxId = validId;
-					(
-						[&]() {
-							while (*std::get<Is>(its) < validId)
+						auto& it = std::get<Is>(iterators_);
+						auto end = std::get<Is>(collections_).end();
+						
+						if (*it < maxId)
+						{
+							allAtMax = false;
+							
+							// Use binary search (galloping) to advance to maxId or beyond
+							// std::lower_bound finds first element >= maxId
+							it = std::lower_bound(it, end, maxId);
+							
+							if (it == end)
 							{
-								++std::get<Is>(its);
-								const auto id = getId<Is>(its, iends);
-								if (id > maxId) // Update max if we found a larger value or EntityId::Invalid if we are at end
-								{
-									maxId = id;
-									break;
-								}
+								anyAtEnd = true;
 							}
-						}()
-					, ...);
-					return maxId;
-				};
-
-				// Advance past the current position
-				++std::get<0>(its);
-				EntityId maxId = getId<0>(its, iends);
-
-				// Find next intersection point
-				while ( maxId != EntityId::Invalid )
-				{
-					// Advance all iterators that are less than max
-					EntityId nextValidId = incrementIfLessThanMaxId(maxId);
-					if ( nextValidId == maxId ) //< All matched up to max
-						return *this; // Found intersection
-
-					maxId = nextValidId;
+						}
+					}(), ...);
+					
+					// Step 3: Check termination conditions
+					if (anyAtEnd)
+					{
+						// At least one iterator reached end - no more intersections
+						// Set all to end for consistency
+						((std::get<Is>(iterators_) = std::get<Is>(collections_).end()), ...);
+						return *this;
+					}
+					
+					if (allAtMax)
+					{
+						// All iterators point to maxId - intersection found!
+						return *this;
+					}
+					
+					// Continue loop - new max will be computed in next iteration
 				}
-				
-				// No more intersections, set all to end
-				setAllAtEnd();
-
-				return *this;
 			}
 
-			Iterator& advance()
+			template<std::size_t... Is>
+			Iterator& beginN( std::index_sequence<Is...> )
 			{
-				// Incrementing at end is an error
-				assert(std::get<0>(iterators_) != std::get<0>(collections_).end());
+				// Check if any iterator is already at end
+				if (((std::get<Is>(iterators_) == std::get<Is>(collections_).end()) || ...))
+				{
+					// Set all to end
+					((std::get<Is>(iterators_) = std::get<Is>(collections_).end()), ...);
+					return *this;
+				}
 
-				if constexpr (sizeof...(Components) == 1)
+				// Check if all iterators already point to the same EntityId
+				EntityId firstId = *std::get<0>(iterators_);
+				bool allMatch = ((Is == 0 || *std::get<Is>(iterators_) == firstId) && ...);
+				
+				if (allMatch)
 				{
-					// Single component - just advance the iterator
-					++std::get<0>(iterators_);
+					// Already at an intersection
+					return *this;
 				}
-				else if constexpr (sizeof...(Components) == 2)
+
+				// Need to find first intersection
+				return intersectN( std::index_sequence<Is...>{} );
+			}
+
+			template<std::size_t... Is>
+			Iterator& incrementN( std::index_sequence<Is...> )
+			{
+				// Advance all iterators by one position
+				((++std::get<Is>(iterators_)), ...);
+				
+				// Check if any iterator reached end after increment
+				if (((std::get<Is>(iterators_) == std::get<Is>(collections_).end()) || ...))
 				{
-					// Optimized 2-way intersection
-					advance2();
+					// Set all to end
+					((std::get<Is>(iterators_) = std::get<Is>(collections_).end()), ...);
+					return *this;
 				}
-				else
+
+				// Check if we're already at an intersection after increment
+				EntityId firstId = *std::get<0>(iterators_);
+				bool allMatch = ((Is == 0 || *std::get<Is>(iterators_) == firstId) && ...);
+				
+				if (allMatch)
 				{
-					advanceN( std::make_index_sequence<sizeof...(Components)>{} );
+					// Lucky! Already at next intersection
+					return *this;
 				}
-				return *this;
-			}		
+
+				// Need to find next intersection
+				return intersectN( std::index_sequence<Is...>{} );
+			}
 
 		private:
 			Collections collections_;
