@@ -135,12 +135,14 @@ namespace SubzeroECS
 
 			bool operator != ( const Iterator& rhs ) const
 			{ 
-				return iterators_ != rhs.iterators_; 
+				//TODO: We could want a deeper test for consistency in debug?
+				return std::get<0>(iterators_) != std::get<0>(rhs.iterators_); 
 			}
 
 			bool operator == ( const Iterator& rhs ) const
 			{ 
-				return iterators_ == rhs.iterators_; 
+				//TODO: We could want a deeper test for consistency in debug?
+				return std::get<0>(iterators_) == std::get<0>(rhs.iterators_); 
 			}
 
 			operator EntityId() const
