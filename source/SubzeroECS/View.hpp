@@ -80,7 +80,7 @@ namespace SubzeroECS
 				}
 				else
 				{
-					beginN( std::make_index_sequence<sizeof...(Components)>{} );
+					begin( std::make_index_sequence<sizeof...(Components)>{} );
 				}
 			}
 
@@ -113,7 +113,7 @@ namespace SubzeroECS
 				}
 				else
 				{
-					incrementN( std::make_index_sequence<sizeof...(Components)>{} );
+					increment( std::make_index_sequence<sizeof...(Components)>{} );
 				}
 				return *this;
 			}
@@ -133,7 +133,6 @@ namespace SubzeroECS
 			operator EntityId() const
 			{ 
 				auto iEntity = std::get<0U>(iterators_);
-				assert(iEntity != std::get<0U>(collections_).end());
 				return *iEntity;
 			}
 
@@ -144,17 +143,9 @@ namespace SubzeroECS
 
 		private:
 
-			template<size_t index>
-			static EntityId getId( auto& its, auto& iends )
-			{
-				return (std::get<index>(its) != std::get<index>(iends))
-					? *std::get<index>(its)
-					: EntityId::Invalid;
-			}
-
 			/** Helper for N-way intersection - find first intersection */
 			template<std::size_t... Is>
-			Iterator& beginN( std::index_sequence<Is...> indices )
+			void begin( std::index_sequence<Is...> indices )
 			{
 				auto endIterators = std::make_tuple(std::get<Is>(collections_).end()...);
 				if (!Intersection::beginN(indices, iterators_, endIterators))
@@ -162,12 +153,11 @@ namespace SubzeroECS
 					// No intersection found - set first iterator to end
 					std::get<0>(iterators_) = std::get<0>(endIterators);
 				}
-				return *this;
 			}
 
 			/** Helper for N-way intersection - increment and find next */
 			template<std::size_t... Is>
-			Iterator& incrementN( std::index_sequence<Is...> indices )
+			void increment( std::index_sequence<Is...> indices )
 			{
 				auto endIterators = std::make_tuple(std::get<Is>(collections_).end()...);
 				if (!Intersection::incrementN(indices, iterators_, endIterators))
@@ -175,7 +165,6 @@ namespace SubzeroECS
 					// No intersection found - set first iterator to end
 					std::get<0>(iterators_) = std::get<0>(endIterators);
 				}
-				return *this;
 			}
 
 		private:
