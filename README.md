@@ -69,28 +69,30 @@ SubzeroECS demonstrates excellent performance characteristics, particularly in h
 - L3 Cache: 24576 KiB (24 MB)
 - Compiler: MSVC with `/O2` optimization
 - OS: Windows
+- Methodology: Median of 10 repetitions (`--benchmark_repetitions=10`)
 
 ### Update Performance at 100K Entities
 
 | Implementation | Coherent (M items/s) | Fragmented (M items/s) | Impact |
 |----------------|---------------------|------------------------|--------|
-| **SubzeroECS** | 182.86              | 182.86                 | **0%** ✓ |
-| **OOP**        | 265.26              | 199.11                 | -25% |
-| **DOD (SoA)**  | 542.98              | 568.84                 | +5% (noise) |
+| **SubzeroECS** | 193.39 ± 6.29       | 194.62 ± 4.35          | **+1%** (noise) ✓ |
+| **OOP**        | 271.68 ± 4.36       | 259.33 ± 6.15          | -5% |
+| **DOD (SoA)**  | 374.35 ± 115.62     | 486.17 ± 14.67         | +30% (high variance) |
 
 ### Update Performance at 10M Entities
 
 | Implementation | Coherent (M items/s) | Fragmented (M items/s) | Impact |
 |----------------|---------------------|------------------------|--------|
-| **SubzeroECS** | 140.49              | 144.00                 | **+2%** (noise) ✓ |
-| **OOP**        | 140.49              | 67.37                  | -52% |
-| **DOD (SoA)**  | 238.14              | 156.10                 | -34% |
+| **SubzeroECS** | 151.21 ± 2.25       | 153.69 ± 4.02          | **+2%** (noise) ✓ |
+| **OOP**        | 126.78 ± 2.63       | 85.35 ± 1.27           | **-33%** |
+| **DOD (SoA)**  | 210.42 ± 7.98       | 196.88 ± 26.62         | -6% |
 
 **Key Findings:**
-- SubzeroECS shows **minimal performance degradation** with mixed entity compositions (fragmentation)
-- Traditional OOP suffers **52% slowdown** at scale with heterogeneous entity types
-- Pure DOD Structure-of-Arrays is faster in absolute terms but SubzeroECS provides better developer ergonomics with competitive performance
-- All implementations experience cache pressure at 10M+ entities (expected behavior)
+- SubzeroECS shows **zero to minimal performance degradation** with mixed entity compositions (fragmentation)
+- Traditional OOP suffers **33% slowdown** at 10M scale with heterogeneous entity types
+- Pure DOD Structure-of-Arrays is faster in absolute terms (~1.9x at 100K, ~1.4x at 10M) but SubzeroECS provides better developer ergonomics with competitive performance
+- The improved N-way intersection algorithm (galloping search with adaptive linear/binary switching) maintains consistent performance across different entity compositions
+- Standard deviations are reported (±) showing measurement reliability; SubzeroECS demonstrates low variance (CV < 3.3%) across all scenarios
 
 See [benchmarks/update_patterns](benchmarks/update_patterns) for detailed benchmark code and methodology.
 
@@ -269,7 +271,7 @@ Yes, SubzeroECS offers dual licensing:
 
 ### How does performance compare to raw arrays?
 
-For coherent access patterns (all entities with same components), SubzeroECS achieves ~33% of pure DOD SoA performance (182M vs 543M items/s) while providing significantly better developer ergonomics. The overhead comes from the view iteration and set intersection logic, which enables the flexible query system.
+For coherent access patterns (all entities with same components), SubzeroECS achieves ~52% of pure DOD SoA performance (193M vs 374M items/s at 100K entities) while providing significantly better developer ergonomics. The overhead comes from the view iteration and set intersection logic, which enables the flexible query system. At larger scales (10M entities), the gap narrows to ~72% (151M vs 210M items/s) as cache effects dominate and the N-way intersection algorithm's efficiency becomes more apparent.
 
 ### What's the entity capacity?
 
