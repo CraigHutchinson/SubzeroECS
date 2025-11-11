@@ -25,9 +25,6 @@ struct get_type_index<T>
 template<typename T>
 using Bare = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
-//TODO: Decide on optimization strategies
-#define SUBZEROECS_VIEW_OPTIM2 1
-
 namespace SubzeroECS
 {
 	/** Creates a union view for ECS-entities with the selected components 
@@ -81,12 +78,6 @@ namespace SubzeroECS
 				{
 					// Single component - already at first element or end
 				}
-#if SUBZEROECS_VIEW_OPTIM2
-				else if constexpr (sizeof...(Components) == 2)
-				{
-					begin2();
-				}
-#endif
 				else
 				{
 					beginN( std::make_index_sequence<sizeof...(Components)>{} );
@@ -120,12 +111,6 @@ namespace SubzeroECS
 					// Single component - just advance the iterator
 					++std::get<0>(iterators_);
 				}
-#if SUBZEROECS_VIEW_OPTIM2
-				else if constexpr (sizeof...(Components) == 2)
-				{
-					increment2();// Optimized 2-way intersection
-				}
-#endif
 				else
 				{
 					incrementN( std::make_index_sequence<sizeof...(Components)>{} );
@@ -165,38 +150,6 @@ namespace SubzeroECS
 				return (std::get<index>(its) != std::get<index>(iends))
 					? *std::get<index>(its)
 					: EntityId::Invalid;
-			}
-
-			/** Optimized helper for 2-way intersection - find first intersection */
-			Iterator& begin2()
-			{				
-				auto endIterators = std::make_tuple(
-					std::get<0>(collections_).end(),
-					std::get<1>(collections_).end()
-				);
-
-				if (!Intersection::begin2(std::make_index_sequence<2>{}, iterators_, endIterators))
-				{
-					// No intersection found - set first iterator to end
-					std::get<0>(iterators_) = std::get<0>(endIterators);
-				}
-				return *this;
-			}
-
-			/** Optimized helper for 2-way intersection - increment and find next */
-			Iterator& increment2()
-			{				
-				auto endIterators = std::make_tuple(
-					std::get<0>(collections_).end(),
-					std::get<1>(collections_).end()
-				);
-
-				if (!Intersection::increment2(std::make_index_sequence<2>{}, iterators_, endIterators))
-				{
-					// No intersection found - set first iterator to end
-					std::get<0>(iterators_) = std::get<0>(endIterators);
-				}
-				return *this;
 			}
 
 			/** Helper for N-way intersection - find first intersection */

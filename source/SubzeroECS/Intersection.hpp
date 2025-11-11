@@ -19,117 +19,12 @@ namespace SubzeroECS
 	 */
 	namespace Intersection
 	{
-		/** Optimized 2-way intersection using classic merge algorithm.
+		/** N-way intersection with optimized 2-way specialization.
 		 * 
-		 * Advances iterators to find the next intersection point.
-		 * Does NOT modify iterators on failure - caller should handle end assignment.
+		 * For 2-way intersection: Uses classic merge algorithm O(n+m)
+		 * For N-way intersection: Uses adaptive galloping algorithm with max-skip strategy
 		 * 
-		 * @tparam Is Index sequence for parameter pack expansion
-		 * @tparam Iterators Tuple of iterator types
-		 * @param iterators Tuple of iterators (modified in place on success)
-		 * @param endIterators Tuple of end iterators (same type as iterators)
-		 * @return true if intersection found, false if any iterator reached end
-		 */
-		template<std::size_t... Is, typename Iterators>
-		bool intersect2(std::index_sequence<Is...>, Iterators& iterators, const Iterators& endIterators)
-		{
-			auto& it1 = std::get<0>(iterators);
-			auto& it2 = std::get<1>(iterators);
-			auto end1 = std::get<0>(endIterators);
-			auto end2 = std::get<1>(endIterators);
-
-			// Find next intersection point
-			while (true)
-			{
-				if (*it1 < *it2)
-				{
-					if (++it1 == end1)
-					{
-						return false; // Reached end
-					}
-				}
-				else if (!(*it2 < *it1)) // *it1 and *it2 are equivalent (intersection found)	
-				{
-					return true;
-				}
-				else
-				{
-					if (++it2 == end2)
-					{
-						return false; // Reached end
-					}
-				}
-			}
-		}
-
-		/** Check if two iterators are at the same position for 2-way begin.
-		 * 
-		 * Checks if already at an intersection or finds the first one.
-		 * Does NOT modify iterators on failure - caller should handle end assignment.
-		 * 
-		 * @tparam Is Index sequence for parameter pack expansion
-		 * @tparam Iterators Tuple of iterator types
-		 * @param iterators Tuple of iterators (modified in place on success)
-		 * @param endIterators Tuple of end iterators (same type as iterators)
-		 * @return true if at intersection, false if any iterator at end
-		 */
-		template<std::size_t... Is, typename Iterators>
-		bool begin2(std::index_sequence<Is...> indices, Iterators& iterators, const Iterators& endIterators)
-		{
-			auto& it1 = std::get<0>(iterators);
-			auto& it2 = std::get<1>(iterators);
-			auto end1 = std::get<0>(endIterators);
-			auto end2 = std::get<1>(endIterators);
-
-			if (it1 == end1 || it2 == end2)
-			{
-				return false; // At end
-			}
-
-			// Check if already at intersection
-			if (*it2 == *it1)
-				return true;
-
-			// Find first intersection
-			return intersect2(indices, iterators, endIterators);
-		}
-
-		/** Increment both iterators and find next intersection for 2-way.
-		 * 
-		 * Advances both iterators past current position and finds next intersection.
-		 * Does NOT modify iterators on failure - caller should handle end assignment.
-		 * 
-		 * @tparam Is Index sequence for parameter pack expansion
-		 * @tparam Iterators Tuple of iterator types
-		 * @param iterators Tuple of iterators (modified in place on success)
-		 * @param endIterators Tuple of end iterators (same type as iterators)
-		 * @return true if next intersection found, false if any iterator reached end
-		 */
-		template<std::size_t... Is, typename Iterators>
-		bool increment2(std::index_sequence<Is...> indices, Iterators& iterators, const Iterators& endIterators)
-		{
-			auto& it1 = std::get<0>(iterators);
-			auto& it2 = std::get<1>(iterators);
-			auto end1 = std::get<0>(endIterators);
-			auto end2 = std::get<1>(endIterators);
-
-			// Advance past current position
-			if (++it1 == end1 || ++it2 == end2)
-			{
-				return false; // Reached end
-			}
-
-			// Quick check if already at next intersection
-			if (*it2 == *it1)
-				return true;
-
-			// Find next intersection
-			return intersect2(indices, iterators, endIterators);
-		}
-
-		/** N-way intersection using adaptive galloping algorithm.
-		 * 
-		 * Uses the "max-skip" strategy:
+		 * Galloping strategy:
 		 * 1. Find maximum EntityId among all current positions
 		 * 2. Advance lagging iterators adaptively:
 		 *    - Linear scan for small gaps (better cache locality)
@@ -138,7 +33,9 @@ namespace SubzeroECS
 		 * 
 		 * Does NOT modify iterators on failure - caller should handle end assignment.
 		 * 
-		 * Complexity: O(n log k) where n is size of smallest set, k is max skip distance
+		 * Complexity: 
+		 * - 2-way: O(n+m) where n,m are collection sizes
+		 * - N-way: O(n log k) where n is size of smallest set, k is max skip distance
 		 * 
 		 * @tparam Is Index sequence for parameter pack expansion
 		 * @tparam Iterators Tuple of iterator types
@@ -149,79 +46,113 @@ namespace SubzeroECS
 		template<std::size_t... Is, typename Iterators>
 		bool intersectN(std::index_sequence<Is...>, Iterators& iterators, const Iterators& endIterators)
 		{
-			// Threshold for switching from linear scan to binary search (galloping)
-			// Based on VLDB paper: small gaps benefit from linear scan (better cache locality)
-			// TODO: Should this size be defined by cache line read size?
-			constexpr std::size_t GallopingThreshold = 32;
-			
-			// Main galloping intersection loop
-			while (true)
+			// Compile-time optimization for 2-way intersection
+			if constexpr (sizeof...(Is) == 2)
 			{
-				// Step 1: Find the maximum EntityId among all current positions
-				EntityId maxId = *std::get<0>(iterators);  // Start with first iterator's value
-				((void)(Is == 0 ? void() : (void)(maxId = std::max(maxId, *std::get<Is>(iterators)))), ...);
-				
-				// Step 2: Advance all iterators that are behind maxId
-				bool allAtMax = true;
-				bool anyAtEnd = false;
-				
-				// Process each iterator
-				([&]()
+				auto& it1 = std::get<0>(iterators);
+				auto& it2 = std::get<1>(iterators);
+				auto end1 = std::get<0>(endIterators);
+				auto end2 = std::get<1>(endIterators);
+
+				// Classic merge algorithm for 2-way intersection
+				while (true)
 				{
-					auto& it = std::get<Is>(iterators);
-					auto end = std::get<Is>(endIterators);
-					
-					if (*it < maxId)
+					if (*it1 < *it2)
 					{
-						allAtMax = false;
-						
-						// Adaptive: use linear scan for small gaps, binary search for large gaps
-						std::size_t linearCount = 0;
-						
-						// Try linear scan first up to threshold
-						while (linearCount < GallopingThreshold && it != end && *it < maxId)
+						if (++it1 == end1)
 						{
-							++it;
-							++linearCount;
-						}
-						
-						if (it != end)
-						{
-							if (*it < maxId)
-							{
-								// Gap is large - use binary search (galloping) from current position
-								it = std::lower_bound(it, end, maxId);
-								if (it == end)
-								{
-									anyAtEnd = true;
-								}
-							}
-						}
-						else
-						{
-							anyAtEnd = true;
+							return false; // Reached end
 						}
 					}
-				}(), ...);
-				
-				// Step 3: Check termination conditions
-				if (anyAtEnd)
-				{
-					// At least one iterator reached end - no more intersections
-					return false;
+					else if (!(*it2 < *it1)) // *it1 and *it2 are equivalent (intersection found)	
+					{
+						return true;
+					}
+					else
+					{
+						if (++it2 == end2)
+						{
+							return false; // Reached end
+						}
+					}
 				}
+			}
+			else
+			{
+				// Threshold for switching from linear scan to binary search (galloping)
+				// Based on VLDB paper: small gaps benefit from linear scan (better cache locality)
+				// TODO: Should this size be defined by cache line read size?
+				constexpr std::size_t GallopingThreshold = 32;
 				
-				if (allAtMax)
+				// Main galloping intersection loop
+				while (true)
 				{
-					// All iterators point to maxId - intersection found!
-					return true;
+					// Step 1: Find the maximum EntityId among all current positions
+					EntityId maxId = *std::get<0>(iterators);  // Start with first iterator's value
+					((void)(Is == 0 ? void() : (void)(maxId = std::max(maxId, *std::get<Is>(iterators)))), ...);
+					
+					// Step 2: Advance all iterators that are behind maxId
+					bool allAtMax = true;
+					bool anyAtEnd = false;
+					
+					// Process each iterator
+					([&]()
+					{
+						auto& it = std::get<Is>(iterators);
+						auto end = std::get<Is>(endIterators);
+						
+						if (*it < maxId)
+						{
+							allAtMax = false;
+							
+							// Adaptive: use linear scan for small gaps, binary search for large gaps
+							std::size_t linearCount = 0;
+							
+							// Try linear scan first up to threshold
+							while (linearCount < GallopingThreshold && it != end && *it < maxId)
+							{
+								++it;
+								++linearCount;
+							}
+							
+							if (it != end)
+							{
+								if (*it < maxId)
+								{
+									// Gap is large - use binary search (galloping) from current position
+									it = std::lower_bound(it, end, maxId);
+									if (it == end)
+									{
+										anyAtEnd = true;
+									}
+								}
+							}
+							else
+							{
+								anyAtEnd = true;
+							}
+						}
+					}(), ...);
+					
+					// Step 3: Check termination conditions
+					if (anyAtEnd)
+					{
+						// At least one iterator reached end - no more intersections
+						return false;
+					}
+					
+					if (allAtMax)
+					{
+						// All iterators point to maxId - intersection found!
+						return true;
+					}
+					
+					// Continue loop - new max will be computed in next iteration
 				}
-				
-				// Continue loop - new max will be computed in next iteration
 			}
 		}
 
-		/** Check if all iterators are already at intersection for N-way begin.
+		/** Check if all iterators are already at intersection (begin operation).
 		 * 
 		 * Checks if already at an intersection or finds the first one.
 		 * Does NOT modify iterators on failure - caller should handle end assignment.
@@ -255,7 +186,7 @@ namespace SubzeroECS
 			return intersectN(indices, iterators, endIterators);
 		}
 
-		/** Increment all iterators and find next intersection for N-way.
+		/** Increment all iterators and find next intersection.
 		 * 
 		 * Advances all iterators past current position and finds next intersection.
 		 * Does NOT modify iterators on failure - caller should handle end assignment.
