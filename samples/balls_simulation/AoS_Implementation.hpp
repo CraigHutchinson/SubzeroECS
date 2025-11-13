@@ -20,10 +20,14 @@ public:
         uint32_t color; // RGBA packed
         
         // Convenience accessors for compatibility with existing code
-        float& x = position.x;
-        float& y = position.y;
-        float& dx = velocity.dx;
-        float& dy = velocity.dy;
+        float& x() { return position.x; }
+        float& y() { return position.y; }
+        float& dx() { return velocity.dx; }
+        float& dy() { return velocity.dy; }
+        const float& x() const { return position.x; }
+        const float& y() const { return position.y; }
+        const float& dx() const { return velocity.dx; }
+        const float& dy() const { return velocity.dy; }
     };
 
     std::vector<Ball> balls;

@@ -255,12 +255,12 @@ private:
                 break;
             case SimulationMode::AoS:
                 for (const auto& ball : aosImpl.balls) {
-                    states.push_back({ball.x, ball.y, ball.dx, ball.dy, ball.radius, ball.mass, ball.color});
+                    states.push_back({ball.position.x, ball.position.y, ball.velocity.dx, ball.velocity.dy, ball.radius, ball.mass, ball.color});
                 }
                 break;
             case SimulationMode::OOP:
                 for (const auto& ball : oopImpl.balls) {
-                    states.push_back({ball.x, ball.y, ball.dx, ball.dy, ball.radius, ball.mass, ball.color});
+                    states.push_back({ball.position.x, ball.position.y, ball.velocity.dx, ball.velocity.dy, ball.radius, ball.mass, ball.color});
                 }
                 break;
         }
@@ -428,7 +428,7 @@ private:
             case SimulationMode::AoS:
                 for (const auto& ball : aosImpl.balls) {
                     circle.setRadius(ball.radius);
-                    circle.setPosition(ball.x - ball.radius, ball.y - ball.radius);
+                    circle.setPosition(ball.position.x - ball.radius, ball.position.y - ball.radius);
                     circle.setFillColor(sf::Color(
                         (ball.color >> 24) & 0xFF,
                         (ball.color >> 16) & 0xFF,
@@ -441,7 +441,7 @@ private:
             case SimulationMode::OOP:
                 for (const auto& ball : oopImpl.balls) {
                     circle.setRadius(ball.radius);
-                    circle.setPosition(ball.x - ball.radius, ball.y - ball.radius);
+                    circle.setPosition(ball.position.x - ball.radius, ball.position.y - ball.radius);
                     circle.setFillColor(sf::Color(
                         (ball.color >> 24) & 0xFF,
                         (ball.color >> 16) & 0xFF,

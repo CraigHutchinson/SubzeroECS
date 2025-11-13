@@ -52,12 +52,6 @@ public:
         float radius;
         float mass;
         uint32_t color; // RGBA packed
-        
-        // Convenience accessors for compatibility with existing code
-        float& x = position.x;
-        float& y = position.y;
-        float& dx = velocity.dx;
-        float& dy = velocity.dy;
     };
 
     std::vector<Ball> balls;
