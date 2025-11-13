@@ -27,6 +27,46 @@ inline void applyDamping(float& velocityX, float& velocityY, float damping) {
     if (std::abs(velocityY) < 0.1f) velocityY = 0.0f;
 }
 
+inline void updateSleepState(bool& isAsleep, float& sleepTimer, float vx, float vy, 
+                             float deltaTime, const PhysicsConfig& config) {
+    float velocityMagnitude = std::sqrt(vx * vx + vy * vy);
+    
+    if (velocityMagnitude < config.sleepVelocityThreshold) {
+        sleepTimer += deltaTime;
+        if (sleepTimer >= config.sleepTimeThreshold) {
+            isAsleep = true;
+        }
+    } else {
+        sleepTimer = 0.0f;
+        isAsleep = false;
+    }
+}
+
+inline void updateSleepState(uint8_t& isAsleep, float& sleepTimer, float vx, float vy, 
+                             float deltaTime, const PhysicsConfig& config) {
+    float velocityMagnitude = std::sqrt(vx * vx + vy * vy);
+    
+    if (velocityMagnitude < config.sleepVelocityThreshold) {
+        sleepTimer += deltaTime;
+        if (sleepTimer >= config.sleepTimeThreshold) {
+            isAsleep = 1;
+        }
+    } else {
+        sleepTimer = 0.0f;
+        isAsleep = 0;
+    }
+}
+
+inline void wakeUp(bool& isAsleep, float& sleepTimer) {
+    isAsleep = false;
+    sleepTimer = 0.0f;
+}
+
+inline void wakeUp(uint8_t& isAsleep, float& sleepTimer) {
+    isAsleep = 0;
+    sleepTimer = 0.0f;
+}
+
 inline void handleWallCollision(float& posX, float& posY, 
                                 float& velX, float& velY,
                                 float radius, const PhysicsConfig& config) {

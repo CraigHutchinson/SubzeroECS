@@ -18,6 +18,8 @@ public:
         float radius;
         float mass;
         uint32_t color; // RGBA packed
+        bool isAsleep = false;
+        float sleepTimer = 0.0f;
         
         // Convenience accessors for compatibility with existing code
         float& x() { return position.x; }
@@ -40,6 +42,8 @@ public:
         ball.radius = radius;
         ball.mass = mass;
         ball.color = color;
+        ball.isAsleep = false;
+        ball.sleepTimer = 0.0f;
         balls.push_back(ball);
     }
 
@@ -48,27 +52,35 @@ public:
     }
 
     void update(float deltaTime) {
-        // Apply gravity
+        // Apply gravity to awake balls
         for (auto& ball : balls) {
-            applyGravityToVelocity(ball.velocity.dy, config.gravity, deltaTime);
+            if (!ball.isAsleep) {
+                applyGravityToVelocity(ball.velocity.dy, config.gravity, deltaTime);
+            }
         }
 
         // Update positions
         for (auto& ball : balls) {
-            updatePositionWithVelocity(ball.position.x, ball.position.y, 
-                                      ball.velocity.dx, ball.velocity.dy, deltaTime);
+            if (!ball.isAsleep) {
+                updatePositionWithVelocity(ball.position.x, ball.position.y, 
+                                          ball.velocity.dx, ball.velocity.dy, deltaTime);
+            }
         }
 
         // Handle boundary collisions
         for (auto& ball : balls) {
-            handleWallCollision(ball.position.x, ball.position.y, 
-                               ball.velocity.dx, ball.velocity.dy, 
-                               ball.radius, config);
+            if (!ball.isAsleep) {
+                handleWallCollision(ball.position.x, ball.position.y, 
+                                   ball.velocity.dx, ball.velocity.dy, 
+                                   ball.radius, config);
+            }
         }
 
         // Handle ball-to-ball collisions
         const size_t count = balls.size();
         for (size_t i = 0; i < count; ++i) {
+            if (balls[i].isAsleep) continue;
+            
             for (size_t j = i + 1; j < count; ++j) {
                 float dist, nx, ny;
                 auto& b1 = balls[i];
@@ -77,6 +89,10 @@ public:
                 if (checkBallCollision(b1.position.x, b1.position.y, b1.radius,
                                       b2.position.x, b2.position.y, b2.radius,
                                       dist, nx, ny)) {
+                    // Wake up both balls
+                    wakeUp(b1.isAsleep, b1.sleepTimer);
+                    wakeUp(b2.isAsleep, b2.sleepTimer);
+                    
                     resolveBallCollision(
                         b1.position.x, b1.position.y, b1.velocity.dx, b1.velocity.dy, 
                         b1.mass, b1.radius,
@@ -88,9 +104,14 @@ public:
             }
         }
 
-        // Apply damping
+        // Apply damping and update sleep state
         for (auto& ball : balls) {
-            applyDamping(ball.velocity.dx, ball.velocity.dy, config.damping);
+            if (!ball.isAsleep) {
+                applyDamping(ball.velocity.dx, ball.velocity.dy, config.damping);
+                updateSleepState(ball.isAsleep, ball.sleepTimer,
+                               ball.velocity.dx, ball.velocity.dy,
+                               deltaTime, config);
+            }
         }
     }
 

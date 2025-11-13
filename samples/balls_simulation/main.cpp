@@ -86,6 +86,7 @@ private:
     sf::Text fpsText;
     sf::Text modeText;
     sf::Text entityCountText;
+    sf::Text sleepCountText;
     sf::Text updateTimeText;
     sf::Text helpText;
     
@@ -100,7 +101,7 @@ private:
     
     // ECS Implementation (using pointers to allow reinitialization)
     std::unique_ptr<SubzeroECS::World> world;
-    std::unique_ptr<SubzeroECS::Collection<Position, Velocity, Radius, Mass, Color>> ecsCollection;
+    std::unique_ptr<SubzeroECS::Collection<Position, Velocity, Radius, Mass, Color, SleepState>> ecsCollection;
     std::unique_ptr<GravitySystem> gravitySystem;
     std::unique_ptr<MovementSystem> movementSystem;
     std::unique_ptr<BoundaryCollisionSystem> boundarySystem;
@@ -113,7 +114,7 @@ private:
     
     void initializeECS() {
         world = std::make_unique<SubzeroECS::World>();
-        ecsCollection = std::make_unique<SubzeroECS::Collection<Position, Velocity, Radius, Mass, Color>>(*world);
+        ecsCollection = std::make_unique<SubzeroECS::Collection<Position, Velocity, Radius, Mass, Color, SleepState>>(*world);
         gravitySystem = std::make_unique<GravitySystem>(*world);
         movementSystem = std::make_unique<MovementSystem>(*world);
         boundarySystem = std::make_unique<BoundaryCollisionSystem>(*world);
@@ -149,10 +150,15 @@ private:
         entityCountText.setFillColor(sf::Color::Cyan);
         entityCountText.setPosition(10, 60);
         
+        sleepCountText.setFont(font);
+        sleepCountText.setCharacterSize(18);
+        sleepCountText.setFillColor(sf::Color::Magenta);
+        sleepCountText.setPosition(10, 85);
+        
         updateTimeText.setFont(font);
         updateTimeText.setCharacterSize(18);
         updateTimeText.setFillColor(sf::Color::Green);
-        updateTimeText.setPosition(10, 85);
+        updateTimeText.setPosition(10, 110);
         
         helpText.setFont(font);
         helpText.setCharacterSize(16);
@@ -228,7 +234,7 @@ private:
         
         switch (currentMode) {
             case SimulationMode::ECS: {
-                auto view = SubzeroECS::View<Position, Velocity, Radius, Mass, Color>(*world);
+                auto view = SubzeroECS::View<Position, Velocity, Radius, Mass, Color, SleepState>(*world);
                 for (auto it = view.begin(); it != view.end(); ++it) {
                     const auto& pos = it.get<Position>();
                     const auto& vel = it.get<Velocity>();
@@ -316,7 +322,8 @@ private:
                     Velocity{dx, dy},
                     Radius{radius},
                     Mass{mass},
-                    Color{r, g, b, a}
+                    Color{r, g, b, a},
+                    SleepState{}
                 );
                 break;
             case SimulationMode::SoA:
@@ -457,6 +464,7 @@ private:
         window.draw(fpsText);
         window.draw(modeText);
         window.draw(entityCountText);
+        window.draw(sleepCountText);
         window.draw(updateTimeText);
         window.draw(helpText);
         
@@ -477,11 +485,54 @@ private:
             modeText.setString(std::string("Mode: ") + getModeString(currentMode));
             entityCountText.setString("Entities: " + std::to_string(entityCount));
             
+            size_t sleepingCount = countSleepingBalls();
+            sleepCountText.setString("Sleeping: " + std::to_string(sleepingCount) + 
+                                     " (" + std::to_string((sleepingCount * 100) / std::max(entityCount, size_t(1))) + "%)");
+            
             ss.str("");
             ss << "Update: " << std::fixed << std::setprecision(2) << currentUpdateTimeMs << " ms  ("
                << std::fixed << std::setprecision(1) << (currentItemsPerSecond / 1000000.0f) << " M items/s)";
             updateTimeText.setString(ss.str());
         }
+    }
+    
+    size_t countSleepingBalls() {
+        size_t count = 0;
+        
+        switch (currentMode) {
+            case SimulationMode::ECS: {
+                auto view = SubzeroECS::View<SleepState>(*world);
+                for (auto it = view.begin(); it != view.end(); ++it) {
+                    if (it.get<SleepState>().isAsleep) {
+                        count++;
+                    }
+                }
+                break;
+            }
+            case SimulationMode::SoA:
+                for (size_t i = 0; i < soaImpl.balls.count; ++i) {
+                    if (soaImpl.balls.isAsleep[i]) {
+                        count++;
+                    }
+                }
+                break;
+            case SimulationMode::AoS:
+                for (const auto& ball : aosImpl.balls) {
+                    if (ball.isAsleep) {
+                        count++;
+                    }
+                }
+                break;
+            case SimulationMode::OOP:
+                for (const auto& ball : oopImpl.balls) {
+                    if (ball.isAsleep) {
+                        count++;
+                    }
+                }
+                break;
+        }
+        
+        return count;
     }
 };
 

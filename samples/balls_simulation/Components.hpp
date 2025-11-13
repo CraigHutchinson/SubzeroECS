@@ -28,6 +28,11 @@ struct Mass {
     float value;
 };
 
+struct SleepState {
+    bool isAsleep = false;
+    float sleepTimer = 0.0f;  // Time the ball has been nearly stationary
+};
+
 // ============================================================================
 // Physics Constants
 // ============================================================================
@@ -41,6 +46,10 @@ struct PhysicsConfig {
     float boxHeight = 900.0f;      // simulation box height
     float minRadius = 5.0f;
     float maxRadius = 30.0f;
+    
+    // Sleep parameters
+    float sleepVelocityThreshold = 100.0f;  // Max velocity magnitude to start sleeping
+    float sleepTimeThreshold = 0.5f;       // Time to stay still before sleeping (seconds)
 };
 
 // ============================================================================

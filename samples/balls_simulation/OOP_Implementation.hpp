@@ -15,22 +15,32 @@ public:
     class Ball {
     public:
         Ball(float x, float y, float dx, float dy, float radius, float mass, uint32_t color)
-            : position{x, y}, velocity{dx, dy}, radius(radius), mass(mass), color(color) {}
+            : position{x, y}, velocity{dx, dy}, radius(radius), mass(mass), color(color), 
+              isAsleep(false), sleepTimer(0.0f) {}
 
         void applyGravity(float gravity, float deltaTime) {
-            applyGravityToVelocity(velocity.dy, gravity, deltaTime);
+            if (!isAsleep) {
+                applyGravityToVelocity(velocity.dy, gravity, deltaTime);
+            }
         }
 
         void updatePosition(float deltaTime) {
-            updatePositionWithVelocity(position.x, position.y, velocity.dx, velocity.dy, deltaTime);
+            if (!isAsleep) {
+                updatePositionWithVelocity(position.x, position.y, velocity.dx, velocity.dy, deltaTime);
+            }
         }
 
         void handleBoundaryCollision(const PhysicsConfig& config) {
-            handleWallCollision(position.x, position.y, velocity.dx, velocity.dy, radius, config);
+            if (!isAsleep) {
+                handleWallCollision(position.x, position.y, velocity.dx, velocity.dy, radius, config);
+            }
         }
 
-        void applyDamping(float damping) {
-            BallsSim::applyDamping(velocity.dx, velocity.dy, damping);
+        void applyDampingAndSleep(float deltaTime, const PhysicsConfig& config) {
+            if (!isAsleep) {
+                BallsSim::applyDamping(velocity.dx, velocity.dy, config.damping);
+                updateSleepState(isAsleep, sleepTimer, velocity.dx, velocity.dy, deltaTime, config);
+            }
         }
 
         void collideWith(Ball& other, float restitution) {
@@ -38,6 +48,10 @@ public:
             if (checkBallCollision(position.x, position.y, radius, 
                                   other.position.x, other.position.y, other.radius,
                                   dist, nx, ny)) {
+                // Wake up both balls
+                wakeUp(isAsleep, sleepTimer);
+                wakeUp(other.isAsleep, other.sleepTimer);
+                
                 resolveBallCollision(
                     position.x, position.y, velocity.dx, velocity.dy, mass, radius,
                     other.position.x, other.position.y, other.velocity.dx, other.velocity.dy, 
@@ -52,6 +66,8 @@ public:
         float radius;
         float mass;
         uint32_t color; // RGBA packed
+        bool isAsleep;
+        float sleepTimer;
     };
 
     std::vector<Ball> balls;
@@ -84,14 +100,16 @@ public:
         // Handle ball-to-ball collisions
         const size_t count = balls.size();
         for (size_t i = 0; i < count; ++i) {
+            if (balls[i].isAsleep) continue;
+            
             for (size_t j = i + 1; j < count; ++j) {
                 balls[i].collideWith(balls[j], config.restitution);
             }
         }
 
-        // Apply damping
+        // Apply damping and update sleep state
         for (auto& ball : balls) {
-            ball.applyDamping(config.damping);
+            ball.applyDampingAndSleep(deltaTime, config);
         }
     }
 

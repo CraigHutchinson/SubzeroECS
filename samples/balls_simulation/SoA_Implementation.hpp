@@ -20,6 +20,8 @@ public:
         std::vector<float> radii;
         std::vector<float> masses;
         std::vector<uint32_t> colors; // RGBA packed
+        std::vector<uint8_t> isAsleep;  // Using uint8_t instead of bool to avoid std::vector<bool> issues
+        std::vector<float> sleepTimers;
         size_t count = 0;
     };
 
@@ -34,6 +36,8 @@ public:
         balls.radii.push_back(radius);
         balls.masses.push_back(mass);
         balls.colors.push_back(color);
+        balls.isAsleep.push_back(false);
+        balls.sleepTimers.push_back(0.0f);
         balls.count++;
     }
 
@@ -45,35 +49,49 @@ public:
         balls.radii.clear();
         balls.masses.clear();
         balls.colors.clear();
+        balls.isAsleep.clear();
+        balls.sleepTimers.clear();
         balls.count = 0;
     }
 
     void update(float deltaTime) {
-        // Apply gravity
+        // Apply gravity only to awake balls
         for (size_t i = 0; i < balls.count; ++i) {
-            applyGravityToVelocity(balls.velocities_dy[i], config.gravity, deltaTime);
+            if (!balls.isAsleep[i]) {
+                applyGravityToVelocity(balls.velocities_dy[i], config.gravity, deltaTime);
+            }
         }
 
-        // Update positions
+        // Update positions only for awake balls
         for (size_t i = 0; i < balls.count; ++i) {
-            updatePositionWithVelocity(balls.positions_x[i], balls.positions_y[i], 
-                                      balls.velocities_dx[i], balls.velocities_dy[i], deltaTime);
+            if (!balls.isAsleep[i]) {
+                updatePositionWithVelocity(balls.positions_x[i], balls.positions_y[i], 
+                                          balls.velocities_dx[i], balls.velocities_dy[i], deltaTime);
+            }
         }
 
         // Handle boundary collisions
         for (size_t i = 0; i < balls.count; ++i) {
-            handleWallCollision(balls.positions_x[i], balls.positions_y[i],
-                               balls.velocities_dx[i], balls.velocities_dy[i],
-                               balls.radii[i], config);
+            if (!balls.isAsleep[i]) {
+                handleWallCollision(balls.positions_x[i], balls.positions_y[i],
+                                   balls.velocities_dx[i], balls.velocities_dy[i],
+                                   balls.radii[i], config);
+            }
         }
 
         // Handle ball-to-ball collisions
         for (size_t i = 0; i < balls.count; ++i) {
+            if (balls.isAsleep[i]) continue;
+            
             for (size_t j = i + 1; j < balls.count; ++j) {
                 float dist, nx, ny;
                 if (checkBallCollision(balls.positions_x[i], balls.positions_y[i], balls.radii[i],
                                       balls.positions_x[j], balls.positions_y[j], balls.radii[j],
                                       dist, nx, ny)) {
+                    // Wake up both balls on collision
+                    wakeUp(balls.isAsleep[i], balls.sleepTimers[i]);
+                    wakeUp(balls.isAsleep[j], balls.sleepTimers[j]);
+                    
                     resolveBallCollision(
                         balls.positions_x[i], balls.positions_y[i], 
                         balls.velocities_dx[i], balls.velocities_dy[i], 
@@ -87,9 +105,14 @@ public:
             }
         }
 
-        // Apply damping
+        // Apply damping and update sleep state
         for (size_t i = 0; i < balls.count; ++i) {
-            applyDamping(balls.velocities_dx[i], balls.velocities_dy[i], config.damping);
+            if (!balls.isAsleep[i]) {
+                applyDamping(balls.velocities_dx[i], balls.velocities_dy[i], config.damping);
+                updateSleepState(balls.isAsleep[i], balls.sleepTimers[i], 
+                               balls.velocities_dx[i], balls.velocities_dy[i], 
+                               deltaTime, config);
+            }
         }
     }
 
