@@ -87,22 +87,25 @@ inline void resolveBallCollision(float& x1, float& y1, float& vx1, float& vy1, f
     x2 += nx * overlap * ratio2;
     y2 += ny * overlap * ratio2;
 
-    // Calculate relative velocity
+    // Calculate relative velocity along collision normal
     float dvx = vx2 - vx1;
     float dvy = vy2 - vy1;
     float dvn = dvx * nx + dvy * ny;
 
-    // Don't resolve if velocities are separating
-    if (dvn < 0.0f) {
+    // Don't resolve if velocities are separating (dvn > 0 means approaching)
+    if (dvn >= 0.0f) {
         return;
     }
 
-    // Apply impulse
-    float impulse = -(1.0f + restitution) * dvn / totalMass;
-    vx1 -= impulse * mass2 * nx;
-    vy1 -= impulse * mass2 * ny;
-    vx2 += impulse * mass1 * nx;
-    vy2 += impulse * mass1 * ny;
+    // Calculate impulse magnitude using correct physics formula
+    // J = -(1 + e) * v_rel · n / (1/m1 + 1/m2)
+    float impulse = -(1.0f + restitution) * dvn / (1.0f / mass1 + 1.0f / mass2);
+    
+    // Apply impulse to both objects
+    vx1 -= (impulse / mass1) * nx;
+    vy1 -= (impulse / mass1) * ny;
+    vx2 += (impulse / mass2) * nx;
+    vy2 += (impulse / mass2) * ny;
 }
 
 } // namespace BallsSim
