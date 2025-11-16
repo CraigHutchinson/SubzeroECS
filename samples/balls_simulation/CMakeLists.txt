@@ -6,7 +6,7 @@ project(BallsSimulation CXX)
 
 CPMAddPackage(
   NAME SFML
-  GIT_TAG 2.6.x
+  GIT_TAG 3.0.2
   GITHUB_REPOSITORY SFML/SFML
   OPTIONS
     "SFML_BUILD_AUDIO OFF"

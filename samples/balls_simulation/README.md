@@ -71,7 +71,7 @@ All implementations share the same physics functions from `PhysicsCommon.hpp`, e
 
 - CMake 3.14 or higher
 - C++20 compatible compiler
-- SFML 2.6.x (automatically downloaded via CPM)
+- SFML 3.0.2 (automatically downloaded via CPM)
 
 ### Build Instructions
 
