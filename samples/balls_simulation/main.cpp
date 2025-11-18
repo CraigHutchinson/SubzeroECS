@@ -34,8 +34,8 @@ const char* getModeString(SimulationMode mode) {
 class BallsSimulation {
 public:
     BallsSimulation() 
-        : window(sf::VideoMode(static_cast<unsigned>(config.boxWidth), 
-                               static_cast<unsigned>(config.boxHeight)), 
+        : window(sf::VideoMode({static_cast<unsigned>(config.boxWidth), 
+                               static_cast<unsigned>(config.boxHeight)}), 
                  "2D Balls Simulation - SubzeroECS Demo")
     {
         window.setFramerateLimit(60);
@@ -48,7 +48,7 @@ public:
         oopImpl.config = config;
         
         // Load font for UI
-        if (!font.loadFromFile("C:/Windows/Fonts/consola.ttf")) {
+        if (!font.openFromFile("C:/Windows/Fonts/consola.ttf")) {
             std::cerr << "Failed to load font\n";
         }
         
@@ -83,12 +83,12 @@ private:
     // Window and rendering
     sf::RenderWindow window;
     sf::Font font;
-    sf::Text fpsText;
-    sf::Text modeText;
-    sf::Text entityCountText;
-    sf::Text sleepCountText;
-    sf::Text updateTimeText;
-    sf::Text helpText;
+    sf::Text fpsText{font};
+    sf::Text modeText{font};
+    sf::Text entityCountText{font};
+    sf::Text sleepCountText{font};
+    sf::Text updateTimeText{font};
+    sf::Text helpText{font};
     
     // Timing
     sf::Clock frameClock;
@@ -135,35 +135,29 @@ private:
     }
     
     void setupUI() {
-        fpsText.setFont(font);
         fpsText.setCharacterSize(18);
         fpsText.setFillColor(sf::Color::White);
-        fpsText.setPosition(10, 10);
+        fpsText.setPosition({10.f, 10.f});
         
-        modeText.setFont(font);
         modeText.setCharacterSize(18);
         modeText.setFillColor(sf::Color::Yellow);
-        modeText.setPosition(10, 35);
+        modeText.setPosition({10.f, 35.f});
         
-        entityCountText.setFont(font);
         entityCountText.setCharacterSize(18);
         entityCountText.setFillColor(sf::Color::Cyan);
-        entityCountText.setPosition(10, 60);
+        entityCountText.setPosition({10.f, 60.f});
         
-        sleepCountText.setFont(font);
         sleepCountText.setCharacterSize(18);
         sleepCountText.setFillColor(sf::Color::Magenta);
-        sleepCountText.setPosition(10, 85);
+        sleepCountText.setPosition({10.f, 85.f});
         
-        updateTimeText.setFont(font);
         updateTimeText.setCharacterSize(18);
         updateTimeText.setFillColor(sf::Color::Green);
-        updateTimeText.setPosition(10, 110);
+        updateTimeText.setPosition({10.f, 110.f});
         
-        helpText.setFont(font);
         helpText.setCharacterSize(16);
         helpText.setFillColor(sf::Color(200, 200, 200));
-        helpText.setPosition(10, config.boxHeight - 140);
+        helpText.setPosition({10.f, static_cast<float>(config.boxHeight - 140)});
         helpText.setString(
             "Controls:\n"
             "  1-4: Switch implementation mode\n"
@@ -175,36 +169,35 @@ private:
     }
     
     void handleEvents() {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
+        while (auto event = window.pollEvent()) {
+            if (event->is<sf::Event::Closed>()) {
                 window.close();
             }
             
-            if (event.type == sf::Event::KeyPressed) {
-                switch (event.key.code) {
-                    case sf::Keyboard::Escape:
+            if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
+                switch (keyPressed->code) {
+                    case sf::Keyboard::Key::Escape:
                         window.close();
                         break;
-                    case sf::Keyboard::Num1:
+                    case sf::Keyboard::Key::Num1:
                         switchMode(SimulationMode::ECS);
                         break;
-                    case sf::Keyboard::Num2:
+                    case sf::Keyboard::Key::Num2:
                         switchMode(SimulationMode::SoA);
                         break;
-                    case sf::Keyboard::Num3:
+                    case sf::Keyboard::Key::Num3:
                         switchMode(SimulationMode::AoS);
                         break;
-                    case sf::Keyboard::Num4:
+                    case sf::Keyboard::Key::Num4:
                         switchMode(SimulationMode::OOP);
                         break;
-                    case sf::Keyboard::Space:
+                    case sf::Keyboard::Key::Space:
                         spawnBalls(10);
                         break;
-                    case sf::Keyboard::C:
+                    case sf::Keyboard::Key::C:
                         clearAllBalls();
                         break;
-                    case sf::Keyboard::R:
+                    case sf::Keyboard::Key::R:
                         clearAllBalls();
                         spawnBalls(100);
                         break;
@@ -409,7 +402,7 @@ private:
                     const auto& col = it.get<Color>();
                     
                     circle.setRadius(rad.value);
-                    circle.setPosition(pos.x - rad.value, pos.y - rad.value);
+                    circle.setPosition({pos.x - rad.value, pos.y - rad.value});
                     circle.setFillColor(sf::Color(col.r, col.g, col.b, col.a));
                     window.draw(circle);
                 }
@@ -421,8 +414,8 @@ private:
                     uint32_t color = soaImpl.balls.colors[i];
                     
                     circle.setRadius(radius);
-                    circle.setPosition(soaImpl.balls.positions_x[i] - radius, 
-                                      soaImpl.balls.positions_y[i] - radius);
+                    circle.setPosition({soaImpl.balls.positions_x[i] - radius, 
+                                      soaImpl.balls.positions_y[i] - radius});
                     circle.setFillColor(sf::Color(
                         (color >> 24) & 0xFF,
                         (color >> 16) & 0xFF,
@@ -435,7 +428,7 @@ private:
             case SimulationMode::AoS:
                 for (const auto& ball : aosImpl.balls) {
                     circle.setRadius(ball.radius);
-                    circle.setPosition(ball.position.x - ball.radius, ball.position.y - ball.radius);
+                    circle.setPosition({ball.position.x - ball.radius, ball.position.y - ball.radius});
                     circle.setFillColor(sf::Color(
                         (ball.color >> 24) & 0xFF,
                         (ball.color >> 16) & 0xFF,
@@ -448,7 +441,7 @@ private:
             case SimulationMode::OOP:
                 for (const auto& ball : oopImpl.balls) {
                     circle.setRadius(ball.radius);
-                    circle.setPosition(ball.position.x - ball.radius, ball.position.y - ball.radius);
+                    circle.setPosition({ball.position.x - ball.radius, ball.position.y - ball.radius});
                     circle.setFillColor(sf::Color(
                         (ball.color >> 24) & 0xFF,
                         (ball.color >> 16) & 0xFF,
