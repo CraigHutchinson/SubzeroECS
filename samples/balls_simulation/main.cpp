@@ -5,9 +5,8 @@
 #include <sstream>
 #include <iomanip>
 
-#include "SubzeroECS/World.hpp"
 #include "Components.hpp"
-#include "ECS_Systems.hpp"
+#include "ECS_Implementation.hpp"
 #include "SoA_Implementation.hpp"
 #include "AoS_Implementation.hpp"
 #include "OOP_Implementation.hpp"
@@ -40,9 +39,8 @@ public:
     {
         window.setFramerateLimit(60);
         
-        initializeECS();
-        
-        // Initialize alternative implementations
+        // Initialize all implementations
+        ecsImpl.config = config;
         soaImpl.config = config;
         aosImpl.config = config;
         oopImpl.config = config;
@@ -54,10 +52,6 @@ public:
         
         setupUI();
         spawnInitialBalls();
-    }
-    
-    ~BallsSimulation() {
-        cleanupECS();
     }
 
     void run() {
@@ -99,40 +93,11 @@ private:
     float currentUpdateTimeMs = 0.0f;
     float currentItemsPerSecond = 0.0f;
     
-    // ECS Implementation (using pointers to allow reinitialization)
-    std::unique_ptr<SubzeroECS::World> world;
-    std::unique_ptr<SubzeroECS::Collection<Position, Velocity, Radius, Mass, Color, SleepState>> ecsCollection;
-    std::unique_ptr<GravitySystem> gravitySystem;
-    std::unique_ptr<MovementSystem> movementSystem;
-    std::unique_ptr<BoundaryCollisionSystem> boundarySystem;
-    std::unique_ptr<BallCollisionSystem> collisionSystem;
-    
-    // Alternative implementations
+    // Implementations
+    ECS_Implementation ecsImpl;
     SoA_Implementation soaImpl;
     AoS_Implementation aosImpl;
     OOP_Implementation oopImpl;
-    
-    void initializeECS() {
-        world = std::make_unique<SubzeroECS::World>();
-        ecsCollection = std::make_unique<SubzeroECS::Collection<Position, Velocity, Radius, Mass, Color, SleepState>>(*world);
-        gravitySystem = std::make_unique<GravitySystem>(*world);
-        movementSystem = std::make_unique<MovementSystem>(*world);
-        boundarySystem = std::make_unique<BoundaryCollisionSystem>(*world);
-        collisionSystem = std::make_unique<BallCollisionSystem>(*world);
-        
-        gravitySystem->gravity = config.gravity;
-        boundarySystem->config = config;
-        collisionSystem->config = config;
-    }
-    
-    void cleanupECS() {
-        collisionSystem.reset();
-        boundarySystem.reset();
-        movementSystem.reset();
-        gravitySystem.reset();
-        ecsCollection.reset();
-        world.reset();
-    }
     
     void setupUI() {
         fpsText.setCharacterSize(18);
@@ -227,7 +192,7 @@ private:
         
         switch (currentMode) {
             case SimulationMode::ECS: {
-                auto view = SubzeroECS::View<Position, Velocity, Radius, Mass, Color, SleepState>(*world);
+                auto view = SubzeroECS::View<Position, Velocity, Radius, Mass, Color, SleepState>(ecsImpl.getWorld());
                 for (auto it = view.begin(); it != view.end(); ++it) {
                     const auto& pos = it.get<Position>();
                     const auto& vel = it.get<Velocity>();
@@ -303,21 +268,9 @@ private:
     }
     
     void addBall(float x, float y, float dx, float dy, float radius, float mass, uint32_t color) {
-        uint8_t r = (color >> 24) & 0xFF;
-        uint8_t g = (color >> 16) & 0xFF;
-        uint8_t b = (color >> 8) & 0xFF;
-        uint8_t a = color & 0xFF;
-        
         switch (currentMode) {
             case SimulationMode::ECS:
-                world->create(
-                    Position{x, y},
-                    Velocity{dx, dy},
-                    Radius{radius},
-                    Mass{mass},
-                    Color{r, g, b, a},
-                    SleepState{}
-                );
+                ecsImpl.addBall(x, y, dx, dy, radius, mass, color);
                 break;
             case SimulationMode::SoA:
                 soaImpl.addBall(x, y, dx, dy, radius, mass, color);
@@ -336,9 +289,7 @@ private:
     void clearAllBalls() {
         switch (currentMode) {
             case SimulationMode::ECS:
-                // Reinitialize ECS to clear all entities
-                cleanupECS();
-                initializeECS();
+                ecsImpl.clear();
                 break;
             case SimulationMode::SoA:
                 soaImpl.clear();
@@ -359,13 +310,7 @@ private:
         
         switch (currentMode) {
             case SimulationMode::ECS:
-                gravitySystem->deltaTime = deltaTime;
-                movementSystem->deltaTime = deltaTime;
-                
-                gravitySystem->update();
-                movementSystem->update();
-                boundarySystem->update();
-                collisionSystem->update();
+                ecsImpl.update(deltaTime);
                 break;
                 
             case SimulationMode::SoA:
@@ -395,7 +340,7 @@ private:
         
         switch (currentMode) {
             case SimulationMode::ECS: {
-                auto view = SubzeroECS::View<Position, Radius, Color>(*world);
+                auto view = SubzeroECS::View<Position, Radius, Color>(ecsImpl.getWorld());
                 for (auto it = view.begin(); it != view.end(); ++it) {
                     const auto& pos = it.get<Position>();
                     const auto& rad = it.get<Radius>();
@@ -494,7 +439,7 @@ private:
         
         switch (currentMode) {
             case SimulationMode::ECS: {
-                auto view = SubzeroECS::View<SleepState>(*world);
+                auto view = SubzeroECS::View<SleepState>(ecsImpl.getWorld());
                 for (auto it = view.begin(); it != view.end(); ++it) {
                     if (it.get<SleepState>().isAsleep) {
                         count++;

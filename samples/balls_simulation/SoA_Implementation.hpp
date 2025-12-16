@@ -89,19 +89,47 @@ public:
                                       balls.positions_x[j], balls.positions_y[j], balls.radii[j],
                                       dist, nx, ny)) {
                     // Wake up both balls on collision
-                    bool a  =balls.isAsleep[i], b = balls.isAsleep[j];
-                    wakeUp(a, balls.sleepTimers[i]);
-                    wakeUp(b, balls.sleepTimers[j]);
-                    balls.isAsleep[i] = a;
-                    balls.isAsleep[j] = b;
+                    // Calculate impulse magnitude BEFORE resolving collision
+                    float impulseMagnitude = calculateCollisionImpulse(
+                        balls.velocities_dx[i], balls.velocities_dy[i], balls.masses[i], balls.isAsleep[i],
+                        balls.velocities_dx[j], balls.velocities_dy[j], balls.masses[j], balls.isAsleep[j],
+                        nx, ny, config.restitution
+                    );
+                    
+                    // Wake up only if impulse is strong enough
+                    float avgMass = (balls.masses[i] + balls.masses[j]) * 0.5f;
+                    float wakeThreshold = config.getWakeUpImpulseThreshold(avgMass);
+                    bool wakeup1 = shouldWakeUp(balls.isAsleep[i] != 0, impulseMagnitude, wakeThreshold);
+                    bool wakeup2 = shouldWakeUp(balls.isAsleep[j] != 0, impulseMagnitude, wakeThreshold);
+                    
+                    // If both are sleeping and colliding, wake at least one (the lighter one)
+                    if (balls.isAsleep[i] && balls.isAsleep[j]) {
+                        if (balls.masses[i] <= balls.masses[j]) {
+                            wakeup1 = true;
+                        } else {
+                            wakeup2 = true;
+                        }
+                    }
+                    
+                    if (wakeup1) {
+                        bool asleep = balls.isAsleep[i] != 0;
+                        wakeUp(asleep, balls.sleepTimers[i]);
+                        balls.isAsleep[i] = asleep ? 1 : 0;
+                    }
+                    if (wakeup2) {
+                        bool asleep = balls.isAsleep[j] != 0;
+                        wakeUp(asleep, balls.sleepTimers[j]);
+                        balls.isAsleep[j] = asleep ? 1 : 0;
+                    }
 
+                    // Resolve collision - function handles all sleep state cases internally
                     resolveBallCollision(
                         balls.positions_x[i], balls.positions_y[i], 
                         balls.velocities_dx[i], balls.velocities_dy[i], 
-                        balls.masses[i], balls.radii[i],
+                        balls.masses[i], balls.radii[i], balls.isAsleep[i],
                         balls.positions_x[j], balls.positions_y[j], 
                         balls.velocities_dx[j], balls.velocities_dy[j],
-                        balls.masses[j], balls.radii[j],
+                        balls.masses[j], balls.radii[j], balls.isAsleep[j],
                         dist, nx, ny, config.restitution
                     );
                 }

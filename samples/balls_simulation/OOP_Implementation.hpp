@@ -43,19 +43,45 @@ public:
             }
         }
 
-        void collideWith(Ball& other, float restitution) {
+        void collideWith(Ball& other, float restitution, const PhysicsConfig& physicsConfig) {
             float dist, nx, ny;
             if (checkBallCollision(position.x, position.y, radius, 
                                   other.position.x, other.position.y, other.radius,
                                   dist, nx, ny)) {
-                // Wake up both balls
-                wakeUp(isAsleep, sleepTimer);
-                wakeUp(other.isAsleep, other.sleepTimer);
+                // Calculate impulse magnitude BEFORE resolving collision
+                float impulseMagnitude = calculateCollisionImpulse(
+                    velocity.dx, velocity.dy, mass, isAsleep,
+                    other.velocity.dx, other.velocity.dy, other.mass, other.isAsleep,
+                    nx, ny, restitution
+                );
                 
+                // Wake up only if impulse is strong enough
+                float avgMass = (mass + other.mass) * 0.5f;
+                float wakeThreshold = physicsConfig.getWakeUpImpulseThreshold(avgMass);
+                bool wakeup1 = shouldWakeUp(isAsleep, impulseMagnitude, wakeThreshold);
+                bool wakeup2 = shouldWakeUp(other.isAsleep, impulseMagnitude, wakeThreshold);
+                
+                // If both are sleeping and colliding, wake at least one (the lighter one)
+                if (isAsleep && other.isAsleep) {
+                    if (mass <= other.mass) {
+                        wakeup1 = true;
+                    } else {
+                        wakeup2 = true;
+                    }
+                }
+                
+                if (wakeup1) {
+                    wakeUp(isAsleep, sleepTimer);
+                }
+                if (wakeup2) {
+                    wakeUp(other.isAsleep, other.sleepTimer);
+                }
+                
+                // Resolve collision - function handles all sleep state cases internally
                 resolveBallCollision(
-                    position.x, position.y, velocity.dx, velocity.dy, mass, radius,
+                    position.x, position.y, velocity.dx, velocity.dy, mass, radius, isAsleep,
                     other.position.x, other.position.y, other.velocity.dx, other.velocity.dy, 
-                    other.mass, other.radius,
+                    other.mass, other.radius, other.isAsleep,
                     dist, nx, ny, restitution
                 );
             }
@@ -103,7 +129,7 @@ public:
             if (balls[i].isAsleep) continue;
             
             for (size_t j = i + 1; j < count; ++j) {
-                balls[i].collideWith(balls[j], config.restitution);
+                balls[i].collideWith(balls[j], config.restitution, config);
             }
         }
 

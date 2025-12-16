@@ -106,12 +106,15 @@ public:
             entities.push_back(it);
         }
 
-        for (size_t i = 0; i < entities.size(); ++i) {
-            // Skip if ball i is asleep
-            if (entities[i].get<SleepState>().isAsleep) continue;
-            
-            for (size_t j = i + 1; j < entities.size(); ++j) {
-                handleCollision(entities[i], entities[j]);
+        // Iterative collision resolution for stability in stacks
+        for (int iteration = 0; iteration < config.collisionIterations; ++iteration) {
+            for (size_t i = 0; i < entities.size(); ++i) {
+                // Skip if ball i is asleep
+                if (entities[i].get<SleepState>().isAsleep) continue;
+                
+                for (size_t j = i + 1; j < entities.size(); ++j) {
+                    handleCollision(entities[i], entities[j]);
+                }
             }
         }
     }
@@ -137,13 +140,41 @@ private:
         if (checkBallCollision(pos1.x, pos1.y, rad1.value,
                               pos2.x, pos2.y, rad2.value,
                               dist, nx, ny)) {
-            // Wake up both balls on collision
-            wakeUp(sleep1.isAsleep, sleep1.sleepTimer);
-            wakeUp(sleep2.isAsleep, sleep2.sleepTimer);
+            // Calculate impulse magnitude BEFORE resolving collision
+            float impulseMagnitude = calculateCollisionImpulse(
+                vel1.dx, vel1.dy, mass1.value, sleep1.isAsleep,
+                vel2.dx, vel2.dy, mass2.value, sleep2.isAsleep,
+                nx, ny, config.restitution
+            );
             
+            // Calculate wake-up threshold dynamically based on mass
+            float avgMass = (mass1.value + mass2.value) * 0.5f;
+            float wakeThreshold = config.getWakeUpImpulseThreshold(avgMass);
+            
+            // Wake up sleeping balls BEFORE resolving collision
+            bool wakeup1 = shouldWakeUp(sleep1.isAsleep, impulseMagnitude, wakeThreshold);
+            bool wakeup2 = shouldWakeUp(sleep2.isAsleep, impulseMagnitude, wakeThreshold);
+            
+            // If both are sleeping and colliding, wake at least one (the lighter one moves more easily)
+            if (sleep1.isAsleep && sleep2.isAsleep) {
+                if (mass1.value <= mass2.value) {
+                    wakeup1 = true;
+                } else {
+                    wakeup2 = true;
+                }
+            }
+            
+            if (wakeup1) {
+                wakeUp(sleep1.isAsleep, sleep1.sleepTimer);
+            }
+            if (wakeup2) {
+                wakeUp(sleep2.isAsleep, sleep2.sleepTimer);
+            }
+            
+            // Resolve collision - function handles all sleep state cases internally
             resolveBallCollision(
-                pos1.x, pos1.y, vel1.dx, vel1.dy, mass1.value, rad1.value,
-                pos2.x, pos2.y, vel2.dx, vel2.dy, mass2.value, rad2.value,
+                pos1.x, pos1.y, vel1.dx, vel1.dy, mass1.value, rad1.value, sleep1.isAsleep,
+                pos2.x, pos2.y, vel2.dx, vel2.dy, mass2.value, rad2.value, sleep2.isAsleep,
                 dist, nx, ny, config.restitution
             );
         }

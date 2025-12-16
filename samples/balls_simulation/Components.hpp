@@ -39,17 +39,29 @@ struct SleepState {
 
 struct PhysicsConfig {
     float gravity = 980.0f;        // pixels/s^2 (roughly Earth gravity scaled)
-    float damping = 0.98f;         // velocity damping (0-1)
-    float restitution = 0.85f;     // bounciness (0-1)
-    float friction = 0.99f;        // friction coefficient (0-1)
+    float damping = 0.95f;         // velocity damping (0-1) - reduced for faster energy dissipation
+    float restitution = 0.3f;      // bounciness (0-1) - reduced to prevent bouncing in piles
+    float friction = 0.98f;        // friction coefficient (0-1) - slightly reduced
     float boxWidth = 1600.0f;      // simulation box width
     float boxHeight = 900.0f;      // simulation box height
     float minRadius = 5.0f;
     float maxRadius = 30.0f;
     
     // Sleep parameters
-    float sleepVelocityThreshold = 100.0f;  // Max velocity magnitude to start sleeping
-    float sleepTimeThreshold = 0.5f;       // Time to stay still before sleeping (seconds)
+    float sleepVelocityThreshold = 1.0f;   // Max velocity magnitude to start sleeping - much lower for stability
+    float sleepTimeThreshold = 0.3f;       // Time to stay still before sleeping (seconds) - faster sleep
+    
+    // Constraint solving parameters
+    int collisionIterations = 3;           // Number of iterations for collision resolution
+    
+    // Calculate wake-up impulse threshold from sleep velocity threshold
+    // For a typical collision, impulse ≈ mass * delta_velocity
+    // We want impulse that would change velocity by sleepVelocityThreshold
+    float getWakeUpImpulseThreshold(float typicalMass = 10.0f) const {
+        // Require enough impulse to impart velocity change above sleep threshold
+        // Using 2x sleep threshold for hysteresis to prevent oscillation
+        return typicalMass * sleepVelocityThreshold * 2.0f;
+    }
 };
 
 // ============================================================================
