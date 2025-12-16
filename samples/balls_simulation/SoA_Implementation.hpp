@@ -89,9 +89,12 @@ public:
                                       balls.positions_x[j], balls.positions_y[j], balls.radii[j],
                                       dist, nx, ny)) {
                     // Wake up both balls on collision
-                    wakeUp(balls.isAsleep[i], balls.sleepTimers[i]);
-                    wakeUp(balls.isAsleep[j], balls.sleepTimers[j]);
-                    
+                    bool a  =balls.isAsleep[i], b = balls.isAsleep[j];
+                    wakeUp(a, balls.sleepTimers[i]);
+                    wakeUp(b, balls.sleepTimers[j]);
+                    balls.isAsleep[i] = a;
+                    balls.isAsleep[j] = b;
+
                     resolveBallCollision(
                         balls.positions_x[i], balls.positions_y[i], 
                         balls.velocities_dx[i], balls.velocities_dy[i], 
@@ -109,9 +112,11 @@ public:
         for (size_t i = 0; i < balls.count; ++i) {
             if (!balls.isAsleep[i]) {
                 applyDamping(balls.velocities_dx[i], balls.velocities_dy[i], config.damping);
-                updateSleepState(balls.isAsleep[i], balls.sleepTimers[i], 
+                bool a = balls.isAsleep[i];
+                updateSleepState(a, balls.sleepTimers[i], 
                                balls.velocities_dx[i], balls.velocities_dy[i], 
                                deltaTime, config);
+                balls.isAsleep[i] = a;
             }
         }
     }
