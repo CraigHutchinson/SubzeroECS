@@ -39,8 +39,8 @@ struct PhysicsConfig {
     float friction = 0.98f;        // friction coefficient (0-1) - slightly reduced
     float boxWidth = 1600.0f;      // simulation box width
     float boxHeight = 900.0f;      // simulation box height
-    float minRadius = 5.0f;
-    float maxRadius = 30.0f;
+    float minRadius = 4.0f;
+    float maxRadius = 16.0f;
     
     // Constraint solving parameters
     int collisionIterations = 3;           // Number of iterations for collision resolution

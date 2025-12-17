@@ -70,13 +70,22 @@ public:
         const size_t count = balls.size();
         for (size_t i = 0; i < count; ++i) {
             for (size_t j = i + 1; j < count; ++j) {
-                float dist, nx, ny;
+                float tCollision, dist, nx, ny;
                 auto& b1 = balls[i];
                 auto& b2 = balls[j];
                 
-                if (checkBallCollision(b1.position.x, b1.position.y, b1.radius,
-                                      b2.position.x, b2.position.y, b2.radius,
-                                      dist, nx, ny)) {
+                if (checkSweptCircleCollision(b1.position.x, b1.position.y, 
+                                             b1.velocity.dx, b1.velocity.dy, b1.radius,
+                                             b2.position.x, b2.position.y,
+                                             b2.velocity.dx, b2.velocity.dy, b2.radius,
+                                             deltaTime,
+                                             tCollision, dist, nx, ny)) {
+                    // Position both balls at collision point
+                    b1.position.x += b1.velocity.dx * deltaTime * tCollision;
+                    b1.position.y += b1.velocity.dy * deltaTime * tCollision;
+                    b2.position.x += b2.velocity.dx * deltaTime * tCollision;
+                    b2.position.y += b2.velocity.dy * deltaTime * tCollision;
+                    
                     resolveBallCollision(
                         b1.position.x, b1.position.y, b1.velocity.dx, b1.velocity.dy, 
                         b1.mass, b1.radius,

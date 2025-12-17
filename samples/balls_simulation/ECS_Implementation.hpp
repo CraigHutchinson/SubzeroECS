@@ -65,6 +65,7 @@ public:
     void update(float deltaTime) {
         gravitySystem->deltaTime = deltaTime;
         movementSystem->deltaTime = deltaTime;
+        collisionSystem->deltaTime = deltaTime;
         
         gravitySystem->update();
         movementSystem->update();

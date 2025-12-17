@@ -72,6 +72,87 @@ inline bool checkBallCollision(float x1, float y1, float radius1,
     return false;
 }
 
+// ============================================================================
+// Swept Circle Collision Detection (prevents tunneling at high speeds)
+// ============================================================================
+// Checks if a moving circle (ball1) collides with a moving circle (ball2) during the timestep
+// Returns true if collision occurs, and outputs the collision time (0-1), collision point, and normal
+inline bool checkSweptCircleCollision(float x1, float y1, float vx1, float vy1, float radius1,
+                                      float x2, float y2, float vx2, float vy2, float radius2,
+                                      float deltaTime,
+                                      float& tCollisionOut, float& distOut, 
+                                      float& nxOut, float& nyOut) {
+    // Relative position and relative velocity (scaled by deltaTime to get displacement)
+    float dx = x2 - x1;
+    float dy = y2 - y1;
+    float dvx = (vx1 - vx2) * deltaTime;  // Relative velocity scaled by time
+    float dvy = (vy1 - vy2) * deltaTime;
+    
+    float sumRadius = radius1 + radius2;
+    
+    // Quadratic equation: |dx + dvx*t|^2 = (sumRadius)^2
+    // Where t is normalized time [0, 1] over the timestep
+    // a*t^2 + b*t + c = 0
+    float a = dvx * dvx + dvy * dvy;
+    float b = 2.0f * (dx * dvx + dy * dvy);
+    float c = dx * dx + dy * dy - sumRadius * sumRadius;
+    
+    // Check if already overlapping
+    if (c < 0.0f) {
+        tCollisionOut = 0.0f;
+        float dist = std::sqrt(dx * dx + dy * dy);
+        if (dist > 0.0001f) {
+            nxOut = dx / dist;
+            nyOut = dy / dist;
+            distOut = dist;
+            return true;
+        }
+    }
+    
+    // Check if there's a collision solution
+    float discriminant = b * b - 4.0f * a * c;
+    if (discriminant < 0.0f) {
+        return false;
+    }
+    
+    float sqrtDisc = std::sqrt(discriminant);
+    float t1 = (-b - sqrtDisc) / (2.0f * a);
+    float t2 = (-b + sqrtDisc) / (2.0f * a);
+    
+    // We want the earliest collision time in range [0, 1]
+    float tCollision = -1.0f;
+    if (t1 >= 0.0f && t1 <= 1.0f) {
+        tCollision = t1;
+    } else if (t2 >= 0.0f && t2 <= 1.0f) {
+        tCollision = t2;
+    } else {
+        return false; // No collision in this timestep
+    }
+    
+    // Calculate collision position (in ball1's frame)
+    float colX = x1 + vx1 * deltaTime * tCollision;
+    float colY = y1 + vy1 * deltaTime * tCollision;
+    
+    // Calculate collision position (in ball2's frame) for verification
+    float col2X = x2 + vx2 * deltaTime * tCollision;
+    float col2Y = y2 + vy2 * deltaTime * tCollision;
+    
+    // Calculate normal (from ball1 to ball2)
+    float nx = col2X - colX;
+    float ny = col2Y - colY;
+    float dist = std::sqrt(nx * nx + ny * ny);
+    
+    if (dist > 0.0001f) {
+        nxOut = nx / dist;
+        nyOut = ny / dist;
+        distOut = dist;
+        tCollisionOut = tCollision;
+        return true;
+    }
+    
+    return false;
+}
+
 inline float calculateCollisionImpulse(float vx1, float vy1, float mass1,
                                        float vx2, float vy2, float mass2,
                                        float nx, float ny, float restitution) {

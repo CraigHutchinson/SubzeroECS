@@ -32,6 +32,8 @@ const char* getModeString(SimulationMode mode) {
 
 class BallsSimulation {
 public:
+    static constexpr size_t defaultBallCount = 500;
+    
     BallsSimulation() 
         : window(sf::VideoMode({static_cast<unsigned>(config.boxWidth), 
                                static_cast<unsigned>(config.boxHeight)}), 
@@ -152,14 +154,14 @@ private:
                         switchMode(SimulationMode::OOP);
                         break;
                     case sf::Keyboard::Key::Space:
-                        spawnBalls(10);
+                        spawnBalls(200);
                         break;
                     case sf::Keyboard::Key::C:
                         clearAllBalls();
                         break;
                     case sf::Keyboard::Key::R:
                         clearAllBalls();
-                        spawnBalls(100);
+                        spawnBalls(defaultBallCount);
                         break;
                     default:
                         break;
@@ -236,7 +238,7 @@ private:
     }
     
     void spawnInitialBalls() {
-        spawnBalls(100);
+        spawnBalls(defaultBallCount);
     }
     
     void spawnBalls(size_t count) {

@@ -33,11 +33,18 @@ public:
             BallsSim::applyDamping(velocity.dx, velocity.dy, config.damping);
         }
 
-        void collideWith(Ball& other, float restitution) {
-            float dist, nx, ny;
-            if (checkBallCollision(position.x, position.y, radius, 
-                                  other.position.x, other.position.y, other.radius,
-                                  dist, nx, ny)) {
+        void collideWith(Ball& other, float deltaTime, float restitution) {
+            float tCollision, dist, nx, ny;
+            if (checkSweptCircleCollision(position.x, position.y, velocity.dx, velocity.dy, radius,
+                                         other.position.x, other.position.y, other.velocity.dx, other.velocity.dy, other.radius,
+                                         deltaTime,
+                                         tCollision, dist, nx, ny)) {
+                // Position both balls at collision point
+                position.x += velocity.dx * deltaTime * tCollision;
+                position.y += velocity.dy * deltaTime * tCollision;
+                other.position.x += other.velocity.dx * deltaTime * tCollision;
+                other.position.y += other.velocity.dy * deltaTime * tCollision;
+                
                 resolveBallCollision(
                     position.x, position.y, velocity.dx, velocity.dy, mass, radius,
                     other.position.x, other.position.y, other.velocity.dx, other.velocity.dy, 
@@ -85,7 +92,7 @@ public:
         const size_t count = balls.size();
         for (size_t i = 0; i < count; ++i) {
             for (size_t j = i + 1; j < count; ++j) {
-                balls[i].collideWith(balls[j], config.restitution);
+                balls[i].collideWith(balls[j], deltaTime, config.restitution);
             }
         }
 

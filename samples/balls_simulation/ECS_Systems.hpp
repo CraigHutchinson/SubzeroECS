@@ -71,6 +71,7 @@ public:
 class BallCollisionSystem {
 public:
     PhysicsConfig config;
+    float deltaTime = 0.0f;
     
     BallCollisionSystem(SubzeroECS::CollectionRegistry& registry)
         : registry_(registry) {}
@@ -111,10 +112,17 @@ private:
         const Radius& rad2 = it2.get<Radius>();
         const Mass& mass2 = it2.get<Mass>();
 
-        float dist, nx, ny;
-        if (checkBallCollision(pos1.x, pos1.y, rad1.value,
-                              pos2.x, pos2.y, rad2.value,
-                              dist, nx, ny)) {
+        float tCollision, dist, nx, ny;
+        if (checkSweptCircleCollision(pos1.x, pos1.y, vel1.dx, vel1.dy, rad1.value,
+                                      pos2.x, pos2.y, vel2.dx, vel2.dy, rad2.value,
+                                      deltaTime,
+                                      tCollision, dist, nx, ny)) {
+            // Position both balls at collision point
+            pos1.x += vel1.dx * deltaTime * tCollision;
+            pos1.y += vel1.dy * deltaTime * tCollision;
+            pos2.x += vel2.dx * deltaTime * tCollision;
+            pos2.y += vel2.dy * deltaTime * tCollision;
+            
             resolveBallCollision(
                 pos1.x, pos1.y, vel1.dx, vel1.dy, mass1.value, rad1.value,
                 pos2.x, pos2.y, vel2.dx, vel2.dy, mass2.value, rad2.value,

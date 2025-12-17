@@ -70,10 +70,19 @@ public:
         // Handle ball-to-ball collisions
         for (size_t i = 0; i < balls.count; ++i) {
             for (size_t j = i + 1; j < balls.count; ++j) {
-                float dist, nx, ny;
-                if (checkBallCollision(balls.positions_x[i], balls.positions_y[i], balls.radii[i],
-                                      balls.positions_x[j], balls.positions_y[j], balls.radii[j],
-                                      dist, nx, ny)) {
+                float tCollision, dist, nx, ny;
+                if (checkSweptCircleCollision(balls.positions_x[i], balls.positions_y[i], 
+                                             balls.velocities_dx[i], balls.velocities_dy[i], balls.radii[i],
+                                             balls.positions_x[j], balls.positions_y[j],
+                                             balls.velocities_dx[j], balls.velocities_dy[j], balls.radii[j],
+                                             deltaTime,
+                                             tCollision, dist, nx, ny)) {
+                    // Position both balls at collision point
+                    balls.positions_x[i] += balls.velocities_dx[i] * deltaTime * tCollision;
+                    balls.positions_y[i] += balls.velocities_dy[i] * deltaTime * tCollision;
+                    balls.positions_x[j] += balls.velocities_dx[j] * deltaTime * tCollision;
+                    balls.positions_y[j] += balls.velocities_dy[j] * deltaTime * tCollision;
+                    
                     resolveBallCollision(
                         balls.positions_x[i], balls.positions_y[i], 
                         balls.velocities_dx[i], balls.velocities_dy[i], 
