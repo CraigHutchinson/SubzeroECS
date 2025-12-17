@@ -28,18 +28,6 @@ struct Mass {
     float value;
 };
 
-struct SleepState {
-    bool isAsleep = false;
-    float sleepTimer = 0.0f;  // Time the ball has been nearly stationary
-    
-    // Running statistics for variance-based sleep detection (Welford's algorithm)
-    int sampleCount = 0;       // Number of position samples taken
-    float meanX = 0.0f;        // Running mean of X position
-    float meanY = 0.0f;        // Running mean of Y position
-    float m2X = 0.0f;          // Running sum of squared differences for X (for variance)
-    float m2Y = 0.0f;          // Running sum of squared differences for Y (for variance)
-};
-
 // ============================================================================
 // Physics Constants
 // ============================================================================
@@ -54,24 +42,8 @@ struct PhysicsConfig {
     float minRadius = 5.0f;
     float maxRadius = 30.0f;
     
-    // Sleep parameters
-    float sleepVarianceThreshold = 4.0f;   // Max position variance to consider sleeping (pixels^2)
-    float sleepTimeThreshold = 0.3f;       // Time to stay still before sleeping (seconds)
-    int minSamplesForSleep = 10;           // Minimum samples needed before checking variance
-    
     // Constraint solving parameters
     int collisionIterations = 3;           // Number of iterations for collision resolution
-    
-    // Calculate wake-up impulse threshold
-    // For a typical collision, impulse ≈ mass * delta_velocity
-    // We want sufficient impulse to move the ball from its stable position
-    float getWakeUpImpulseThreshold(float typicalMass = 10.0f) const {
-        // Require enough impulse to potentially exceed the position variance threshold
-        // Approximate: sqrt(sleepVarianceThreshold) gives std dev in pixels
-        // Convert to velocity threshold and then impulse
-        float approxVelocityThreshold = std::sqrt(sleepVarianceThreshold) * 2.0f;
-        return typicalMass * approxVelocityThreshold;
-    }
 };
 
 // ============================================================================

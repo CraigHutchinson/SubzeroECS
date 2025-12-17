@@ -80,7 +80,6 @@ private:
     sf::Text fpsText{font};
     sf::Text modeText{font};
     sf::Text entityCountText{font};
-    sf::Text sleepCountText{font};
     sf::Text updateTimeText{font};
     sf::Text helpText{font};
     
@@ -109,12 +108,8 @@ private:
         modeText.setPosition({10.f, 35.f});
         
         entityCountText.setCharacterSize(18);
-        entityCountText.setFillColor(sf::Color::Cyan);
+        entityCountText.setFillColor(sf::Color::Yellow);
         entityCountText.setPosition({10.f, 60.f});
-        
-        sleepCountText.setCharacterSize(18);
-        sleepCountText.setFillColor(sf::Color::Magenta);
-        sleepCountText.setPosition({10.f, 85.f});
         
         updateTimeText.setCharacterSize(18);
         updateTimeText.setFillColor(sf::Color::Green);
@@ -192,7 +187,7 @@ private:
         
         switch (currentMode) {
             case SimulationMode::ECS: {
-                auto view = SubzeroECS::View<Position, Velocity, Radius, Mass, Color, SleepState>(ecsImpl.getWorld());
+                auto view = SubzeroECS::View<Position, Velocity, Radius, Mass, Color>(ecsImpl.getWorld());
                 for (auto it = view.begin(); it != view.end(); ++it) {
                     const auto& pos = it.get<Position>();
                     const auto& vel = it.get<Velocity>();
@@ -402,7 +397,6 @@ private:
         window.draw(fpsText);
         window.draw(modeText);
         window.draw(entityCountText);
-        window.draw(sleepCountText);
         window.draw(updateTimeText);
         window.draw(helpText);
         
@@ -423,54 +417,11 @@ private:
             modeText.setString(std::string("Mode: ") + getModeString(currentMode));
             entityCountText.setString("Entities: " + std::to_string(entityCount));
             
-            size_t sleepingCount = countSleepingBalls();
-            sleepCountText.setString("Sleeping: " + std::to_string(sleepingCount) + 
-                                     " (" + std::to_string((sleepingCount * 100) / std::max(entityCount, size_t(1))) + "%)");
-            
             ss.str("");
             ss << "Update: " << std::fixed << std::setprecision(2) << currentUpdateTimeMs << " ms  ("
                << std::fixed << std::setprecision(1) << (currentItemsPerSecond / 1000000.0f) << " M items/s)";
             updateTimeText.setString(ss.str());
         }
-    }
-    
-    size_t countSleepingBalls() {
-        size_t count = 0;
-        
-        switch (currentMode) {
-            case SimulationMode::ECS: {
-                auto view = SubzeroECS::View<SleepState>(ecsImpl.getWorld());
-                for (auto it = view.begin(); it != view.end(); ++it) {
-                    if (it.get<SleepState>().isAsleep) {
-                        count++;
-                    }
-                }
-                break;
-            }
-            case SimulationMode::SoA:
-                for (size_t i = 0; i < soaImpl.balls.count; ++i) {
-                    if (soaImpl.balls.isAsleep[i]) {
-                        count++;
-                    }
-                }
-                break;
-            case SimulationMode::AoS:
-                for (const auto& ball : aosImpl.balls) {
-                    if (ball.isAsleep) {
-                        count++;
-                    }
-                }
-                break;
-            case SimulationMode::OOP:
-                for (const auto& ball : oopImpl.balls) {
-                    if (ball.isAsleep) {
-                        count++;
-                    }
-                }
-                break;
-        }
-        
-        return count;
     }
 };
 

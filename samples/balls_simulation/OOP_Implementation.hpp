@@ -15,77 +15,33 @@ public:
     class Ball {
     public:
         Ball(float x, float y, float dx, float dy, float radius, float mass, uint32_t color)
-            : position{x, y}, velocity{dx, dy}, radius(radius), mass(mass), color(color), 
-              isAsleep(false), sleepTimer(0.0f), sampleCount(0), 
-              meanX(0.0f), meanY(0.0f), m2X(0.0f), m2Y(0.0f) {}
+            : position{x, y}, velocity{dx, dy}, radius(radius), mass(mass), color(color) {}
 
         void applyGravity(float gravity, float deltaTime) {
-            if (!isAsleep) {
-                applyGravityToVelocity(velocity.dy, gravity, deltaTime);
-            }
+            applyGravityToVelocity(velocity.dy, gravity, deltaTime);
         }
 
         void updatePosition(float deltaTime) {
-            if (!isAsleep) {
-                updatePositionWithVelocity(position.x, position.y, velocity.dx, velocity.dy, deltaTime);
-            }
+            updatePositionWithVelocity(position.x, position.y, velocity.dx, velocity.dy, deltaTime);
         }
 
         void handleBoundaryCollision(const PhysicsConfig& config) {
-            if (!isAsleep) {
-                handleWallCollision(position.x, position.y, velocity.dx, velocity.dy, radius, config);
-            }
+            handleWallCollision(position.x, position.y, velocity.dx, velocity.dy, radius, config);
         }
 
-        void applyDampingAndSleep(float deltaTime, const PhysicsConfig& config) {
-            if (!isAsleep) {
-                BallsSim::applyDamping(velocity.dx, velocity.dy, config.damping);
-                updateSleepStateWithVariance(isAsleep, sleepTimer, sampleCount,
-                                            meanX, meanY, m2X, m2Y,
-                                            position.x, position.y, deltaTime, config);
-            }
+        void applyDamping(const PhysicsConfig& config) {
+            BallsSim::applyDamping(velocity.dx, velocity.dy, config.damping);
         }
 
-        void collideWith(Ball& other, float restitution, const PhysicsConfig& physicsConfig) {
+        void collideWith(Ball& other, float restitution) {
             float dist, nx, ny;
             if (checkBallCollision(position.x, position.y, radius, 
                                   other.position.x, other.position.y, other.radius,
                                   dist, nx, ny)) {
-                // Calculate impulse magnitude BEFORE resolving collision
-                float impulseMagnitude = calculateCollisionImpulse(
-                    velocity.dx, velocity.dy, mass, isAsleep,
-                    other.velocity.dx, other.velocity.dy, other.mass, other.isAsleep,
-                    nx, ny, restitution
-                );
-                
-                // Wake up only if impulse is strong enough
-                float avgMass = (mass + other.mass) * 0.5f;
-                float wakeThreshold = physicsConfig.getWakeUpImpulseThreshold(avgMass);
-                bool wakeup1 = shouldWakeUp(isAsleep, impulseMagnitude, wakeThreshold);
-                bool wakeup2 = shouldWakeUp(other.isAsleep, impulseMagnitude, wakeThreshold);
-                
-                // If both are sleeping and colliding, wake at least one (the lighter one)
-                if (isAsleep && other.isAsleep) {
-                    if (mass <= other.mass) {
-                        wakeup1 = true;
-                    } else {
-                        wakeup2 = true;
-                    }
-                }
-                
-                if (wakeup1) {
-                    wakeUpWithVariance(isAsleep, sleepTimer, sampleCount, meanX, meanY, m2X, m2Y);
-                }
-                if (wakeup2) {
-                    wakeUpWithVariance(other.isAsleep, other.sleepTimer, other.sampleCount,
-                                      other.meanX, other.meanY, other.m2X, other.m2Y);
-                }
-                
-                // Resolve collision - function handles all sleep state cases internally
                 resolveBallCollision(
-                    position.x, position.y, velocity.dx, velocity.dy, mass, radius, isAsleep,
+                    position.x, position.y, velocity.dx, velocity.dy, mass, radius,
                     other.position.x, other.position.y, other.velocity.dx, other.velocity.dy, 
-                    other.mass, other.radius, other.isAsleep,
+                    other.mass, other.radius,
                     dist, nx, ny, restitution
                 );
             }
@@ -96,12 +52,6 @@ public:
         float radius;
         float mass;
         uint32_t color; // RGBA packed
-        bool isAsleep;
-        float sleepTimer;
-        // Variance tracking for sleep detection
-        int sampleCount;
-        float meanX, meanY;
-        float m2X, m2Y;
     };
 
     std::vector<Ball> balls;
@@ -134,16 +84,14 @@ public:
         // Handle ball-to-ball collisions
         const size_t count = balls.size();
         for (size_t i = 0; i < count; ++i) {
-            if (balls[i].isAsleep) continue;
-            
             for (size_t j = i + 1; j < count; ++j) {
-                balls[i].collideWith(balls[j], config.restitution, config);
+                balls[i].collideWith(balls[j], config.restitution);
             }
         }
 
-        // Apply damping and update sleep state
+        // Apply damping
         for (auto& ball : balls) {
-            ball.applyDampingAndSleep(deltaTime, config);
+            ball.applyDamping(config);
         }
     }
 

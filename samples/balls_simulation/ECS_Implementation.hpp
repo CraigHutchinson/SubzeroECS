@@ -24,7 +24,7 @@ public:
         world = std::make_unique<SubzeroECS::World>();
         
         // Register component collections
-        collections = std::make_unique<SubzeroECS::Collection<Position, Velocity, Radius, Mass, Color, SleepState>>(*world);
+        collections = std::make_unique<SubzeroECS::Collection<Position, Velocity, Radius, Mass, Color>>(*world);
         
         gravitySystem = std::make_unique<GravitySystem>(*world);
         movementSystem = std::make_unique<MovementSystem>(*world);
@@ -47,8 +47,7 @@ public:
             Velocity{dx, dy},
             Radius{radius},
             Mass{mass},
-            Color{r, g, b, a},
-            SleepState{}
+            Color{r, g, b, a}
         );
     }
 
@@ -79,7 +78,7 @@ public:
 
 private:
     std::unique_ptr<SubzeroECS::World> world;
-    std::unique_ptr<SubzeroECS::Collection<Position, Velocity, Radius, Mass, Color, SleepState>> collections;
+    std::unique_ptr<SubzeroECS::Collection<Position, Velocity, Radius, Mass, Color>> collections;
     std::unique_ptr<GravitySystem> gravitySystem;
     std::unique_ptr<MovementSystem> movementSystem;
     std::unique_ptr<BoundaryCollisionSystem> boundarySystem;
