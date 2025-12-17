@@ -417,6 +417,7 @@ private:
             modeText.setString(std::string("Mode: ") + getModeString(currentMode));
             entityCountText.setString("Entities: " + std::to_string(entityCount));
             
+            ss.str("");
             ss << "Update: " << std::fixed << std::setprecision(2) << currentUpdateTimeMs << " ms  ("
                << std::fixed << std::setprecision(3) << (currentItemsPerSecond / 1000000.0f) << " M items/s)";
             updateTimeText.setString(ss.str());
