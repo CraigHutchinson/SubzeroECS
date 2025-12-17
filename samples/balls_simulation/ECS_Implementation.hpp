@@ -53,12 +53,12 @@ public:
 
     void clear() {
         // Reinitialize to clear all entities
-        world.reset();
-        collections.reset();
         gravitySystem.reset();
         movementSystem.reset();
         boundarySystem.reset();
         collisionSystem.reset();
+        collections.reset();
+        world.reset();
         initialize();
     }
 

@@ -83,11 +83,6 @@ packageProject(
 )
 
 
-add_subdirectory(test)
-add_subdirectory(samples)
-
-# Benchmarks are optional - only build if requested
-option(SUBZEROECS_BUILD_BENCHMARKS "Build SubzeroECS benchmarks" OFF)
-if(SUBZEROECS_BUILD_BENCHMARKS)
-  add_subdirectory(benchmarks)
-endif()
+add_subdirectory(test EXCLUDE_FROM_ALL)
+add_subdirectory(samples EXCLUDE_FROM_ALL)
+add_subdirectory(benchmarks EXCLUDE_FROM_ALL)

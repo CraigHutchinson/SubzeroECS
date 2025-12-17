@@ -27,7 +27,7 @@ inline void applyDamping(float& velocityX, float& velocityY, float damping) {
     if (std::abs(velocityY) < 0.5f) velocityY = 0.0f;
 }
 
-inline void handleWallCollision(float& posX, float& posY, 
+inline void handleWallCollision(float& posX, float& posY,
                                 float& velX, float& velY,
                                 float radius, const PhysicsConfig& config) {
     // Left/Right walls
