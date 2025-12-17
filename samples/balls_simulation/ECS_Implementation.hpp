@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SubzeroECS/World.hpp"
+#include "SubzeroECS/Collection.hpp"
 #include "Components.hpp"
 #include "ECS_Systems.hpp"
 #include <memory>
@@ -21,6 +22,9 @@ public:
 
     void initialize() {
         world = std::make_unique<SubzeroECS::World>();
+        
+        // Register component collections
+        collections = std::make_unique<SubzeroECS::Collection<Position, Velocity, Radius, Mass, Color, SleepState>>(*world);
         
         gravitySystem = std::make_unique<GravitySystem>(*world);
         movementSystem = std::make_unique<MovementSystem>(*world);
@@ -51,6 +55,7 @@ public:
     void clear() {
         // Reinitialize to clear all entities
         world.reset();
+        collections.reset();
         gravitySystem.reset();
         movementSystem.reset();
         boundarySystem.reset();
@@ -74,6 +79,7 @@ public:
 
 private:
     std::unique_ptr<SubzeroECS::World> world;
+    std::unique_ptr<SubzeroECS::Collection<Position, Velocity, Radius, Mass, Color, SleepState>> collections;
     std::unique_ptr<GravitySystem> gravitySystem;
     std::unique_ptr<MovementSystem> movementSystem;
     std::unique_ptr<BoundaryCollisionSystem> boundarySystem;

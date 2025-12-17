@@ -78,8 +78,10 @@ public:
         if (!sleepState.isAsleep) {
             handleWallCollision(pos.x, pos.y, vel.dx, vel.dy, radius.value, config);
             applyDamping(vel.dx, vel.dy, config.damping);
-            updateSleepState(sleepState.isAsleep, sleepState.sleepTimer, 
-                           vel.dx, vel.dy, 0.016f, config); // Approximate deltaTime
+            updateSleepStateWithVariance(sleepState.isAsleep, sleepState.sleepTimer,
+                                        sleepState.sampleCount, sleepState.meanX, sleepState.meanY,
+                                        sleepState.m2X, sleepState.m2Y,
+                                        pos.x, pos.y, 0.016f, config); // Approximate deltaTime
         }
     }
 };
@@ -165,10 +167,14 @@ private:
             }
             
             if (wakeup1) {
-                wakeUp(sleep1.isAsleep, sleep1.sleepTimer);
+                wakeUpWithVariance(sleep1.isAsleep, sleep1.sleepTimer,
+                                  sleep1.sampleCount, sleep1.meanX, sleep1.meanY,
+                                  sleep1.m2X, sleep1.m2Y);
             }
             if (wakeup2) {
-                wakeUp(sleep2.isAsleep, sleep2.sleepTimer);
+                wakeUpWithVariance(sleep2.isAsleep, sleep2.sleepTimer,
+                                  sleep2.sampleCount, sleep2.meanX, sleep2.meanY,
+                                  sleep2.m2X, sleep2.m2Y);
             }
             
             // Resolve collision - function handles all sleep state cases internally

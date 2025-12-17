@@ -22,6 +22,12 @@ public:
         std::vector<uint32_t> colors; // RGBA packed
         std::vector<uint8_t> isAsleep;  // Using uint8_t instead of bool to avoid std::vector<bool> issues
         std::vector<float> sleepTimers;
+        // Variance tracking for sleep detection
+        std::vector<int> sampleCounts;
+        std::vector<float> meanXs;
+        std::vector<float> meanYs;
+        std::vector<float> m2Xs;
+        std::vector<float> m2Ys;
         size_t count = 0;
     };
 
@@ -38,6 +44,11 @@ public:
         balls.colors.push_back(color);
         balls.isAsleep.push_back(false);
         balls.sleepTimers.push_back(0.0f);
+        balls.sampleCounts.push_back(0);
+        balls.meanXs.push_back(0.0f);
+        balls.meanYs.push_back(0.0f);
+        balls.m2Xs.push_back(0.0f);
+        balls.m2Ys.push_back(0.0f);
         balls.count++;
     }
 
@@ -51,6 +62,11 @@ public:
         balls.colors.clear();
         balls.isAsleep.clear();
         balls.sleepTimers.clear();
+        balls.sampleCounts.clear();
+        balls.meanXs.clear();
+        balls.meanYs.clear();
+        balls.m2Xs.clear();
+        balls.m2Ys.clear();
         balls.count = 0;
     }
 
@@ -113,12 +129,14 @@ public:
                     
                     if (wakeup1) {
                         bool asleep = balls.isAsleep[i] != 0;
-                        wakeUp(asleep, balls.sleepTimers[i]);
+                        wakeUpWithVariance(asleep, balls.sleepTimers[i], balls.sampleCounts[i],
+                                          balls.meanXs[i], balls.meanYs[i], balls.m2Xs[i], balls.m2Ys[i]);
                         balls.isAsleep[i] = asleep ? 1 : 0;
                     }
                     if (wakeup2) {
                         bool asleep = balls.isAsleep[j] != 0;
-                        wakeUp(asleep, balls.sleepTimers[j]);
+                        wakeUpWithVariance(asleep, balls.sleepTimers[j], balls.sampleCounts[j],
+                                          balls.meanXs[j], balls.meanYs[j], balls.m2Xs[j], balls.m2Ys[j]);
                         balls.isAsleep[j] = asleep ? 1 : 0;
                     }
 
@@ -141,9 +159,11 @@ public:
             if (!balls.isAsleep[i]) {
                 applyDamping(balls.velocities_dx[i], balls.velocities_dy[i], config.damping);
                 bool a = balls.isAsleep[i];
-                updateSleepState(a, balls.sleepTimers[i], 
-                               balls.velocities_dx[i], balls.velocities_dy[i], 
-                               deltaTime, config);
+                updateSleepStateWithVariance(a, balls.sleepTimers[i], balls.sampleCounts[i],
+                                            balls.meanXs[i], balls.meanYs[i], 
+                                            balls.m2Xs[i], balls.m2Ys[i],
+                                            balls.positions_x[i], balls.positions_y[i],
+                                            deltaTime, config);
                 balls.isAsleep[i] = a;
             }
         }

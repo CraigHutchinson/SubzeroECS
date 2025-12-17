@@ -27,24 +27,90 @@ inline void applyDamping(float& velocityX, float& velocityY, float damping) {
     if (std::abs(velocityY) < 0.5f) velocityY = 0.0f;
 }
 
-inline void updateSleepState(bool& isAsleep, float& sleepTimer, float vx, float vy, 
-                             float deltaTime, const PhysicsConfig& config) {
-    float velocityMagnitude = std::sqrt(vx * vx + vy * vy);
+inline void updateSleepState([[maybe_unused]] bool& isAsleep, 
+                             [[maybe_unused]] float& sleepTimer, 
+                             [[maybe_unused]] float vx, 
+                             [[maybe_unused]] float vy, 
+                             [[maybe_unused]] float deltaTime, 
+                             [[maybe_unused]] const PhysicsConfig& config) {
+    // Not used anymore - kept for compatibility
+    // Use updateSleepStateWithVariance instead
+}
+
+inline void updateSleepStateWithVariance(bool& isAsleep, float& sleepTimer, 
+                                         int& sampleCount, float& meanX, float& meanY,
+                                         float& m2X, float& m2Y,
+                                         float posX, float posY, 
+                                         float deltaTime, const PhysicsConfig& config) {
+    // Welford's online algorithm for running mean and variance
+    // This allows us to detect if a ball is jittering around the same position
+    // without storing the full history of positions
     
-    if (velocityMagnitude < config.sleepVelocityThreshold) {
-        sleepTimer += deltaTime;
-        if (sleepTimer >= config.sleepTimeThreshold) {
-            isAsleep = true;
+    sampleCount++;
+    
+    // Update running mean and M2 (sum of squared differences) for X
+    float deltaX = posX - meanX;
+    meanX += deltaX / sampleCount;
+    float delta2X = posX - meanX;
+    m2X += deltaX * delta2X;
+    
+    // Update running mean and M2 for Y
+    float deltaY = posY - meanY;
+    meanY += deltaY / sampleCount;
+    float delta2Y = posY - meanY;
+    m2Y += deltaY * delta2Y;
+    
+    // Calculate variance (biased toward recent position by design)
+    // Note: For small sample counts, this gives population variance
+    if (sampleCount >= config.minSamplesForSleep) {
+        float varianceX = m2X / sampleCount;
+        float varianceY = m2Y / sampleCount;
+        float totalVariance = varianceX + varianceY;
+        
+        // Check if position variance is low enough to sleep
+        if (totalVariance < config.sleepVarianceThreshold) {
+            sleepTimer += deltaTime;
+            if (sleepTimer >= config.sleepTimeThreshold) {
+                isAsleep = true;
+            }
+        } else {
+            // Reset sleep timer if variance is too high
+            sleepTimer = 0.0f;
+            isAsleep = false;
         }
     } else {
+        // Not enough samples yet, keep accumulating
         sleepTimer = 0.0f;
         isAsleep = false;
+    }
+    
+    // Limit sample count to prevent overflow and bias toward recent history
+    // Reset statistics periodically to adapt to new stable positions
+    const int maxSamples = 100;
+    if (sampleCount >= maxSamples) {
+        // Decay the statistics to bias toward current position
+        sampleCount = sampleCount / 2;
+        m2X = m2X / 2.0f;
+        m2Y = m2Y / 2.0f;
     }
 }
 
 inline void wakeUp(bool& isAsleep, float& sleepTimer) {
     isAsleep = false;
     sleepTimer = 0.0f;
+}
+
+inline void wakeUpWithVariance(bool& isAsleep, float& sleepTimer,
+                                int& sampleCount, float& meanX, float& meanY,
+                                float& m2X, float& m2Y) {
+    isAsleep = false;
+    sleepTimer = 0.0f;
+    // Reset variance tracking so it can re-establish at new position
+    sampleCount = 0;
+    meanX = 0.0f;
+    meanY = 0.0f;
+    m2X = 0.0f;
+    m2Y = 0.0f;
 }
 
 inline bool shouldWakeUp(bool isAsleep, float impulseMagnitude, float threshold) {

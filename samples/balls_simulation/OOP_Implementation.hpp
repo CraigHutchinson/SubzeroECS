@@ -16,7 +16,8 @@ public:
     public:
         Ball(float x, float y, float dx, float dy, float radius, float mass, uint32_t color)
             : position{x, y}, velocity{dx, dy}, radius(radius), mass(mass), color(color), 
-              isAsleep(false), sleepTimer(0.0f) {}
+              isAsleep(false), sleepTimer(0.0f), sampleCount(0), 
+              meanX(0.0f), meanY(0.0f), m2X(0.0f), m2Y(0.0f) {}
 
         void applyGravity(float gravity, float deltaTime) {
             if (!isAsleep) {
@@ -39,7 +40,9 @@ public:
         void applyDampingAndSleep(float deltaTime, const PhysicsConfig& config) {
             if (!isAsleep) {
                 BallsSim::applyDamping(velocity.dx, velocity.dy, config.damping);
-                updateSleepState(isAsleep, sleepTimer, velocity.dx, velocity.dy, deltaTime, config);
+                updateSleepStateWithVariance(isAsleep, sleepTimer, sampleCount,
+                                            meanX, meanY, m2X, m2Y,
+                                            position.x, position.y, deltaTime, config);
             }
         }
 
@@ -71,10 +74,11 @@ public:
                 }
                 
                 if (wakeup1) {
-                    wakeUp(isAsleep, sleepTimer);
+                    wakeUpWithVariance(isAsleep, sleepTimer, sampleCount, meanX, meanY, m2X, m2Y);
                 }
                 if (wakeup2) {
-                    wakeUp(other.isAsleep, other.sleepTimer);
+                    wakeUpWithVariance(other.isAsleep, other.sleepTimer, other.sampleCount,
+                                      other.meanX, other.meanY, other.m2X, other.m2Y);
                 }
                 
                 // Resolve collision - function handles all sleep state cases internally
@@ -94,6 +98,10 @@ public:
         uint32_t color; // RGBA packed
         bool isAsleep;
         float sleepTimer;
+        // Variance tracking for sleep detection
+        int sampleCount;
+        float meanX, meanY;
+        float m2X, m2Y;
     };
 
     std::vector<Ball> balls;

@@ -20,6 +20,12 @@ public:
         uint32_t color; // RGBA packed
         bool isAsleep = false;
         float sleepTimer = 0.0f;
+        // Variance tracking for sleep detection
+        int sampleCount = 0;
+        float meanX = 0.0f;
+        float meanY = 0.0f;
+        float m2X = 0.0f;
+        float m2Y = 0.0f;
         
         // Convenience accessors for compatibility with existing code
         float& x() { return position.x; }
@@ -112,10 +118,12 @@ public:
                     }
                     
                     if (wakeup1) {
-                        wakeUp(b1.isAsleep, b1.sleepTimer);
+                        wakeUpWithVariance(b1.isAsleep, b1.sleepTimer, b1.sampleCount,
+                                          b1.meanX, b1.meanY, b1.m2X, b1.m2Y);
                     }
                     if (wakeup2) {
-                        wakeUp(b2.isAsleep, b2.sleepTimer);
+                        wakeUpWithVariance(b2.isAsleep, b2.sleepTimer, b2.sampleCount,
+                                          b2.meanX, b2.meanY, b2.m2X, b2.m2Y);
                     }
                     
                     // Resolve collision - function handles all sleep state cases internally
@@ -134,9 +142,11 @@ public:
         for (auto& ball : balls) {
             if (!ball.isAsleep) {
                 applyDamping(ball.velocity.dx, ball.velocity.dy, config.damping);
-                updateSleepState(ball.isAsleep, ball.sleepTimer,
-                               ball.velocity.dx, ball.velocity.dy,
-                               deltaTime, config);
+                updateSleepStateWithVariance(ball.isAsleep, ball.sleepTimer,
+                                           ball.sampleCount, ball.meanX, ball.meanY,
+                                           ball.m2X, ball.m2Y,
+                                           ball.position.x, ball.position.y,
+                                           deltaTime, config);
             }
         }
     }
