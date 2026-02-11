@@ -2,10 +2,10 @@
 #
 # SPDX-FileCopyrightText: Copyright (c) 2019-2023 Lars Melchior and contributors
 
-set(CPM_DOWNLOAD_VERSION 0.42.0)
+set(CPM_DOWNLOAD_VERSION 0.42.1)
 set(CPM_HASH_SUM "2020b4fc42dba44817983e06342e682ecfc3d2f484a581f11cc5731fbe4dce8a")
 
-# CPM configure to use a user-profile caching by default
+# EXTENSION: CPM configure to use a user-profile caching by default
 # @note This can be overriden by defining CPM_SOURCE_CACHE or the CPM_SOURCE_CACHE environment variable
 if(NOT DEFINED CPM_SOURCE_CACHE AND NOT DEFINED ENV{CPM_SOURCE_CACHE})
   get_filename_component(CPM_SOURCE_CACHE "~/.cpm" ABSOLUTE)

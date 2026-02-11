@@ -20,6 +20,13 @@ target_link_libraries(update_patterns_benchmark
 # Set C++ standard
 target_compile_features(update_patterns_benchmark PRIVATE cxx_std_20)
 
+# Enable unity builds for faster compilation
+set_target_properties(update_patterns_benchmark 
+    PROPERTIES 
+        UNITY_BUILD ON
+        UNITY_BUILD_BATCH_SIZE 8
+)
+
 # Enable optimizations for benchmarks
 # Note: Benchmarks should always be built in Release mode for accurate results
 if(MSVC)

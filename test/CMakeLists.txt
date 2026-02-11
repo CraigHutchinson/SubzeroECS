@@ -46,7 +46,10 @@ target_link_libraries(${PROJECT_NAME}
 )
 set_target_properties(${PROJECT_NAME} 
   PROPERTIES 
-    CXX_STANDARD 20)
+    CXX_STANDARD 20
+    UNITY_BUILD ON
+    UNITY_BUILD_BATCH_SIZE 16
+)
 
 # enable compiler warnings
 if(NOT TEST_INSTALLED_VERSION)

@@ -75,7 +75,12 @@
       "installDir": "${sourceDir}/out/install/${presetName}",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
-        "CMAKE_CXX_COMPILER": "cl.exe"
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "USE_CCACHE": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_JOB_POOLS": "compile=8;link=2",
+        "CMAKE_JOB_POOL_COMPILE": "compile",
+        "CMAKE_JOB_POOL_LINK": "link"
       },
       "condition": {
         "type": "equals",
@@ -95,6 +100,12 @@
       "binaryDir": "${sourceDir}/out/${hostSystemName}-build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
       "cacheVariables": {
+        "USE_CCACHE": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "USE_LLD": "ON",
+        "CMAKE_JOB_POOLS": "compile=8;link=2",
+        "CMAKE_JOB_POOL_COMPILE": "compile",
+        "CMAKE_JOB_POOL_LINK": "link"
       },
       "condition": {
         "type": "equals",
@@ -114,6 +125,11 @@
       "binaryDir": "${sourceDir}/out/${hostSystemName}-build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
       "cacheVariables": {
+        "USE_CCACHE": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_JOB_POOLS": "compile=8;link=2",
+        "CMAKE_JOB_POOL_COMPILE": "compile",
+        "CMAKE_JOB_POOL_LINK": "link"
       },
       "condition": {
         "type": "equals",

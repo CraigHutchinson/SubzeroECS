@@ -6,6 +6,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(CPM)
 
+# Import build optimization tools (ccache, linkers, etc.)
+include(tools)
+
 # Version.cmake automates our sematic build versioning
 include(Version)
 
@@ -67,6 +70,21 @@ target_include_directories(
                          $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
 )
 
+# ---- Precompiled Headers for faster builds ----
+# Note: C++20 modules would provide even better build times (50-80% faster) but the
+# ecosystem is not yet production-ready as of 2026. See documentation/pages/CPP20_MODULES_FUTURE.md
+# for details on future migration plans when tooling matures (estimated 2027-2028).
+target_precompile_headers(${PROJECT_NAME} 
+  PRIVATE
+    <vector>
+    <unordered_map>
+    <memory>
+    <algorithm>
+    <cstdint>
+    <type_traits>
+    <utility>
+)
+
 # ---- Create an installable target ----
 string(TOLOWER ${PROJECT_NAME}/version.h VERSION_HEADER_LOCATION)
 
@@ -82,7 +100,8 @@ packageProject(
   DEPENDENCIES "fmt 9.1.0"
 )
 
-
-add_subdirectory(test EXCLUDE_FROM_ALL)
-add_subdirectory(samples EXCLUDE_FROM_ALL)
-add_subdirectory(benchmarks EXCLUDE_FROM_ALL)
+# Build tests, samples, and benchmarks by default
+# (previously EXCLUDE_FROM_ALL - now included for better development workflow)
+add_subdirectory(test)
+add_subdirectory(samples)
+add_subdirectory(benchmarks)
